@@ -1,0 +1,1155 @@
+{
+  "version": "0.1.0",
+  "cases": [
+    {
+      "case_id": "CASE-001",
+      "gold_dx": "Primary lung malignancy",
+      "status": "escalated",
+      "reason": "can't-miss diagnosis 'Primary lung malignancy' at S*=0.79 \u2265 \u03c4_flag=0.30",
+      "rounds": [
+        {
+          "round": 0,
+          "D_bar": 0.03842,
+          "retrievals": 17,
+          "top": [
+            {
+              "dx": "Primary lung malignancy",
+              "S": 0.7187,
+              "S_star": 0.7916,
+              "E": 0.7212,
+              "disagreement": 0.01909,
+              "per_agent": {
+                "Radiologist": 0.832,
+                "Cardiologist": 0.17,
+                "Oncologist": 0.9002,
+                "Generalist": 0.7858
+              }
+            },
+            {
+              "dx": "Demand ischemia (type 2 MI)",
+              "S": 0.447,
+              "S_star": 0.4774,
+              "E": 0.2224,
+              "disagreement": 0.08434,
+              "per_agent": {
+                "Radiologist": 0.1,
+                "Cardiologist": 0.7858,
+                "Oncologist": 0.1,
+                "Generalist": 0.6457
+              }
+            },
+            {
+              "dx": "Malignant pericardial effusion",
+              "S": 0.4229,
+              "S_star": 0.3787,
+              "E": -0.3351,
+              "disagreement": 0.01182,
+              "per_agent": {
+                "Radiologist": 0.4378,
+                "Cardiologist": 0.3894,
+                "Oncologist": 0.5866,
+                "Generalist": 0.17
+              }
+            },
+            {
+              "dx": "Metastatic disease (extrathoracic)",
+              "S": 0.2523,
+              "S_star": 0.3162,
+              "E": 0.5737,
+              "disagreement": 0.0,
+              "per_agent": {
+                "Radiologist": 0.1,
+                "Cardiologist": 0.1,
+                "Oncologist": 0.5498,
+                "Generalist": 0.1
+              }
+            },
+            {
+              "dx": "Pulmonary tuberculosis",
+              "S": 0.3159,
+              "S_star": 0.2958,
+              "E": -0.1729,
+              "disagreement": 0.0241,
+              "per_agent": {
+                "Radiologist": 0.362,
+                "Cardiologist": 0.1,
+                "Oncologist": 0.1824,
+                "Generalist": 0.525
+              }
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "D_bar": 0.03452,
+          "retrievals": 23,
+          "top": [
+            {
+              "dx": "Primary lung malignancy",
+              "S": 0.7189,
+              "S_star": 0.7918,
+              "E": 0.7212,
+              "disagreement": 0.01905,
+              "per_agent": {
+                "Radiologist": 0.832,
+                "Cardiologist": 0.17,
+                "Oncologist": 0.9002,
+                "Generalist": 0.7858
+              }
+            },
+            {
+              "dx": "Demand ischemia (type 2 MI)",
+              "S": 0.4467,
+              "S_star": 0.4771,
+              "E": 0.2224,
+              "disagreement": 0.08452,
+              "per_agent": {
+                "Radiologist": 0.1,
+                "Cardiologist": 0.7858,
+                "Oncologist": 0.1,
+                "Generalist": 0.6457
+              }
+            },
+            {
+              "dx": "Metastatic disease (extrathoracic)",
+              "S": 0.2506,
+              "S_star": 0.337,
+              "E": 0.7617,
+              "disagreement": 0.0,
+              "per_agent": {
+                "Radiologist": 0.1,
+                "Cardiologist": 0.1,
+                "Oncologist": 0.5437,
+                "Generalist": 0.1
+              }
+            },
+            {
+              "dx": "Malignant pericardial effusion",
+              "S": 0.3745,
+              "S_star": 0.3324,
+              "E": -0.3351,
+              "disagreement": 0.00341,
+              "per_agent": {
+                "Radiologist": 0.4378,
+                "Cardiologist": 0.3894,
+                "Oncologist": 0.4435,
+                "Generalist": 0.17
+              }
+            },
+            {
+              "dx": "Pulmonary tuberculosis",
+              "S": 0.3067,
+              "S_star": 0.2869,
+              "E": -0.1729,
+              "disagreement": 0.02053,
+              "per_agent": {
+                "Radiologist": 0.362,
+                "Cardiologist": 0.1,
+                "Oncologist": 0.1824,
+                "Generalist": 0.497
+              }
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "D_bar": 0.03452,
+          "retrievals": 26,
+          "top": [
+            {
+              "dx": "Primary lung malignancy",
+              "S": 0.7189,
+              "S_star": 0.7918,
+              "E": 0.7212,
+              "disagreement": 0.01905,
+              "per_agent": {
+                "Radiologist": 0.832,
+                "Cardiologist": 0.17,
+                "Oncologist": 0.9002,
+                "Generalist": 0.7858
+              }
+            },
+            {
+              "dx": "Demand ischemia (type 2 MI)",
+              "S": 0.4467,
+              "S_star": 0.4771,
+              "E": 0.2224,
+              "disagreement": 0.08452,
+              "per_agent": {
+                "Radiologist": 0.1,
+                "Cardiologist": 0.7858,
+                "Oncologist": 0.1,
+                "Generalist": 0.6457
+              }
+            },
+            {
+              "dx": "Metastatic disease (extrathoracic)",
+              "S": 0.2489,
+              "S_star": 0.335,
+              "E": 0.7617,
+              "disagreement": 0.0,
+              "per_agent": {
+                "Radiologist": 0.1,
+                "Cardiologist": 0.1,
+                "Oncologist": 0.5387,
+                "Generalist": 0.1
+              }
+            },
+            {
+              "dx": "Malignant pericardial effusion",
+              "S": 0.3745,
+              "S_star": 0.3324,
+              "E": -0.3351,
+              "disagreement": 0.00341,
+              "per_agent": {
+                "Radiologist": 0.4378,
+                "Cardiologist": 0.3894,
+                "Oncologist": 0.4435,
+                "Generalist": 0.17
+              }
+            },
+            {
+              "dx": "Pulmonary tuberculosis",
+              "S": 0.2984,
+              "S_star": 0.2789,
+              "E": -0.1729,
+              "disagreement": 0.0176,
+              "per_agent": {
+                "Radiologist": 0.362,
+                "Cardiologist": 0.1,
+                "Oncologist": 0.1824,
+                "Generalist": 0.4713
+              }
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "D_bar": 0.03452,
+          "retrievals": 29,
+          "top": [
+            {
+              "dx": "Primary lung malignancy",
+              "S": 0.7189,
+              "S_star": 0.7918,
+              "E": 0.7212,
+              "disagreement": 0.01905,
+              "per_agent": {
+                "Radiologist": 0.832,
+                "Cardiologist": 0.17,
+                "Oncologist": 0.9002,
+                "Generalist": 0.7858
+              }
+            },
+            {
+              "dx": "Demand ischemia (type 2 MI)",
+              "S": 0.4467,
+              "S_star": 0.4771,
+              "E": 0.2224,
+              "disagreement": 0.08452,
+              "per_agent": {
+                "Radiologist": 0.1,
+                "Cardiologist": 0.7858,
+                "Oncologist": 0.1,
+                "Generalist": 0.6457
+              }
+            },
+            {
+              "dx": "Metastatic disease (extrathoracic)",
+              "S": 0.2472,
+              "S_star": 0.333,
+              "E": 0.7617,
+              "disagreement": 0.0,
+              "per_agent": {
+                "Radiologist": 0.1,
+                "Cardiologist": 0.1,
+                "Oncologist": 0.5337,
+                "Generalist": 0.1
+              }
+            },
+            {
+              "dx": "Malignant pericardial effusion",
+              "S": 0.3745,
+              "S_star": 0.3324,
+              "E": -0.3351,
+              "disagreement": 0.00341,
+              "per_agent": {
+                "Radiologist": 0.4378,
+                "Cardiologist": 0.3894,
+                "Oncologist": 0.4435,
+                "Generalist": 0.17
+              }
+            },
+            {
+              "dx": "Pulmonary embolism",
+              "S": 0.3008,
+              "S_star": 0.2737,
+              "E": -0.2407,
+              "disagreement": 0.0,
+              "per_agent": {
+                "Radiologist": 0.17,
+                "Cardiologist": 0.5682,
+                "Oncologist": 0.17,
+                "Generalist": 0.17
+              }
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "D_bar": 0.03566,
+          "retrievals": 32,
+          "top": [
+            {
+              "dx": "Primary lung malignancy",
+              "S": 0.7189,
+              "S_star": 0.7918,
+              "E": 0.7212,
+              "disagreement": 0.01905,
+              "per_agent": {
+                "Radiologist": 0.832,
+                "Cardiologist": 0.17,
+                "Oncologist": 0.9002,
+                "Generalist": 0.7858
+              }
+            },
+            {
+              "dx": "Demand ischemia (type 2 MI)",
+              "S": 0.4467,
+              "S_star": 0.4771,
+              "E": 0.2224,
+              "disagreement": 0.08452,
+              "per_agent": {
+                "Radiologist": 0.1,
+                "Cardiologist": 0.7858,
+                "Oncologist": 0.1,
+                "Generalist": 0.6457
+              }
+            },
+            {
+              "dx": "Malignant pericardial effusion",
+              "S": 0.3745,
+              "S_star": 0.3324,
+              "E": -0.3351,
+              "disagreement": 0.00341,
+              "per_agent": {
+                "Radiologist": 0.4378,
+                "Cardiologist": 0.3894,
+                "Oncologist": 0.4435,
+                "Generalist": 0.17
+              }
+            },
+            {
+              "dx": "Metastatic disease (extrathoracic)",
+              "S": 0.2455,
+              "S_star": 0.3309,
+              "E": 0.7617,
+              "disagreement": 0.0,
+              "per_agent": {
+                "Radiologist": 0.1,
+                "Cardiologist": 0.1,
+                "Oncologist": 0.5287,
+                "Generalist": 0.1
+              }
+            },
+            {
+              "dx": "Pulmonary embolism",
+              "S": 0.2974,
+              "S_star": 0.2705,
+              "E": -0.2407,
+              "disagreement": 0.0,
+              "per_agent": {
+                "Radiologist": 0.17,
+                "Cardiologist": 0.5579,
+                "Oncologist": 0.17,
+                "Generalist": 0.17
+              }
+            }
+          ]
+        }
+      ],
+      "consensus": [
+        {
+          "dx": "Primary lung malignancy",
+          "icd10": "C34.90",
+          "S": 0.7189,
+          "S_star": 0.7918,
+          "E": 0.7212,
+          "disagreement": 0.01905,
+          "per_agent": {
+            "Radiologist": 0.832,
+            "Cardiologist": 0.17,
+            "Oncologist": 0.9002,
+            "Generalist": 0.7858
+          },
+          "red_flag": true,
+          "n_support": 4,
+          "n_refute": 1
+        },
+        {
+          "dx": "Demand ischemia (type 2 MI)",
+          "icd10": "I21.A1",
+          "S": 0.4467,
+          "S_star": 0.4771,
+          "E": 0.2224,
+          "disagreement": 0.08452,
+          "per_agent": {
+            "Radiologist": 0.1,
+            "Cardiologist": 0.7858,
+            "Oncologist": 0.1,
+            "Generalist": 0.6457
+          },
+          "red_flag": false,
+          "n_support": 3,
+          "n_refute": 2
+        },
+        {
+          "dx": "Malignant pericardial effusion",
+          "icd10": "C79.89",
+          "S": 0.3745,
+          "S_star": 0.3324,
+          "E": -0.3351,
+          "disagreement": 0.00341,
+          "per_agent": {
+            "Radiologist": 0.4378,
+            "Cardiologist": 0.3894,
+            "Oncologist": 0.4435,
+            "Generalist": 0.17
+          },
+          "red_flag": true,
+          "n_support": 3,
+          "n_refute": 3
+        },
+        {
+          "dx": "Metastatic disease (extrathoracic)",
+          "icd10": "C79.9",
+          "S": 0.2455,
+          "S_star": 0.3309,
+          "E": 0.7617,
+          "disagreement": 0.0,
+          "per_agent": {
+            "Radiologist": 0.1,
+            "Cardiologist": 0.1,
+            "Oncologist": 0.5287,
+            "Generalist": 0.1
+          },
+          "red_flag": false,
+          "n_support": 4,
+          "n_refute": 0
+        },
+        {
+          "dx": "Pulmonary embolism",
+          "icd10": "I26.99",
+          "S": 0.2974,
+          "S_star": 0.2705,
+          "E": -0.2407,
+          "disagreement": 0.0,
+          "per_agent": {
+            "Radiologist": 0.17,
+            "Cardiologist": 0.5579,
+            "Oncologist": 0.17,
+            "Generalist": 0.17
+          },
+          "red_flag": true,
+          "n_support": 1,
+          "n_refute": 2
+        },
+        {
+          "dx": "Pulmonary tuberculosis",
+          "icd10": "A15.0",
+          "S": 0.2839,
+          "S_star": 0.2649,
+          "E": -0.1729,
+          "disagreement": 0.01328,
+          "per_agent": {
+            "Radiologist": 0.362,
+            "Cardiologist": 0.1,
+            "Oncologist": 0.1824,
+            "Generalist": 0.4266
+          },
+          "red_flag": false,
+          "n_support": 2,
+          "n_refute": 2
+        },
+        {
+          "dx": "Cardiac tamponade",
+          "icd10": "I31.4",
+          "S": 0.219,
+          "S_star": 0.2415,
+          "E": 0.2307,
+          "disagreement": 0.0027,
+          "per_agent": {
+            "Radiologist": 0.17,
+            "Cardiologist": 0.2315,
+            "Oncologist": 0.17,
+            "Generalist": 0.2994
+          },
+          "red_flag": true,
+          "n_support": 3,
+          "n_refute": 2
+        },
+        {
+          "dx": "Congestive heart failure",
+          "icd10": "I50.9",
+          "S": 0.1208,
+          "S_star": 0.1075,
+          "E": -0.2407,
+          "disagreement": 0.0,
+          "per_agent": {
+            "Radiologist": 0.1,
+            "Cardiologist": 0.1634,
+            "Oncologist": 0.1,
+            "Generalist": 0.1
+          },
+          "red_flag": false,
+          "n_support": 1,
+          "n_refute": 2
+        },
+        {
+          "dx": "Sarcoidosis",
+          "icd10": "D86.0",
+          "S": 0.0894,
+          "S_star": 0.0982,
+          "E": 0.1891,
+          "disagreement": 0.0,
+          "per_agent": {
+            "Radiologist": 0.0522,
+            "Cardiologist": 0.1,
+            "Oncologist": 0.1,
+            "Generalist": 0.1
+          },
+          "red_flag": false,
+          "n_support": 2,
+          "n_refute": 1
+        }
+      ],
+      "red_flags": {
+        "Primary lung malignancy": 0.7918,
+        "Malignant pericardial effusion": 0.3324
+      },
+      "ledger_size": 52,
+      "groundedness_pass_rate": 1.0,
+      "claims_checked": 81,
+      "top1_hit": true,
+      "top3_hit": true,
+      "report_path": "output/report_CASE-001.md",
+      "transcript_path": "output/transcript_CASE-001.md"
+    },
+    {
+      "case_id": "CASE-002",
+      "gold_dx": "Benign pulmonary granuloma",
+      "status": "converged",
+      "reason": "D\u0304=0.0093 \u2264 \u03c4_agree at round 2",
+      "rounds": [
+        {
+          "round": 0,
+          "D_bar": 0.01119,
+          "retrievals": 5,
+          "top": [
+            {
+              "dx": "Benign pulmonary granuloma",
+              "S": 0.5499,
+              "S_star": 0.6248,
+              "E": 0.5632,
+              "disagreement": 0.03356,
+              "per_agent": {
+                "Radiologist": 0.7685,
+                "Cardiologist": 0.1,
+                "Oncologist": 0.475,
+                "Generalist": 0.1
+              }
+            },
+            {
+              "dx": "Pulmonary embolism",
+              "S": 0.1932,
+              "S_star": 0.1576,
+              "E": -0.4496,
+              "disagreement": 0.0,
+              "per_agent": {
+                "Radiologist": 0.17,
+                "Cardiologist": 0.256,
+                "Oncologist": 0.17,
+                "Generalist": 0.17
+              }
+            },
+            {
+              "dx": "Congestive heart failure",
+              "S": 0.1171,
+              "S_star": 0.0948,
+              "E": -0.4308,
+              "disagreement": 0.0,
+              "per_agent": {
+                "Radiologist": 0.1,
+                "Cardiologist": 0.1634,
+                "Oncologist": 0.1,
+                "Generalist": 0.1
+              }
+            },
+            {
+              "dx": "Community-acquired pneumonia",
+              "S": 0.107,
+              "S_star": 0.0737,
+              "E": -0.7455,
+              "disagreement": 0.0,
+              "per_agent": {
+                "Radiologist": 0.1,
+                "Cardiologist": 0.1,
+                "Oncologist": 0.1,
+                "Generalist": 0.1502
+              }
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "D_bar": 0.01036,
+          "retrievals": 7,
+          "top": [
+            {
+              "dx": "Benign pulmonary granuloma",
+              "S": 0.5318,
+              "S_star": 0.6076,
+              "E": 0.5632,
+              "disagreement": 0.03107,
+              "per_agent": {
+                "Radiologist": 0.7452,
+                "Cardiologist": 0.1,
+                "Oncologist": 0.475,
+                "Generalist": 0.1
+              }
+            },
+            {
+              "dx": "Pulmonary embolism",
+              "S": 0.1932,
+              "S_star": 0.1575,
+              "E": -0.4496,
+              "disagreement": 0.0,
+              "per_agent": {
+                "Radiologist": 0.17,
+                "Cardiologist": 0.256,
+                "Oncologist": 0.17,
+                "Generalist": 0.17
+              }
+            },
+            {
+              "dx": "Congestive heart failure",
+              "S": 0.1171,
+              "S_star": 0.0947,
+              "E": -0.4308,
+              "disagreement": 0.0,
+              "per_agent": {
+                "Radiologist": 0.1,
+                "Cardiologist": 0.1634,
+                "Oncologist": 0.1,
+                "Generalist": 0.1
+              }
+            },
+            {
+              "dx": "Community-acquired pneumonia",
+              "S": 0.1077,
+              "S_star": 0.0742,
+              "E": -0.7455,
+              "disagreement": 0.0,
+              "per_agent": {
+                "Radiologist": 0.1,
+                "Cardiologist": 0.1,
+                "Oncologist": 0.1,
+                "Generalist": 0.1502
+              }
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "D_bar": 0.0093,
+          "retrievals": 9,
+          "top": [
+            {
+              "dx": "Benign pulmonary granuloma",
+              "S": 0.5177,
+              "S_star": 0.594,
+              "E": 0.5632,
+              "disagreement": 0.0279,
+              "per_agent": {
+                "Radiologist": 0.722,
+                "Cardiologist": 0.1,
+                "Oncologist": 0.475,
+                "Generalist": 0.1
+              }
+            },
+            {
+              "dx": "Pulmonary embolism",
+              "S": 0.1933,
+              "S_star": 0.1577,
+              "E": -0.4496,
+              "disagreement": 0.0,
+              "per_agent": {
+                "Radiologist": 0.17,
+                "Cardiologist": 0.256,
+                "Oncologist": 0.17,
+                "Generalist": 0.17
+              }
+            },
+            {
+              "dx": "Congestive heart failure",
+              "S": 0.1172,
+              "S_star": 0.0948,
+              "E": -0.4308,
+              "disagreement": 0.0,
+              "per_agent": {
+                "Radiologist": 0.1,
+                "Cardiologist": 0.1634,
+                "Oncologist": 0.1,
+                "Generalist": 0.1
+              }
+            },
+            {
+              "dx": "Community-acquired pneumonia",
+              "S": 0.1078,
+              "S_star": 0.0742,
+              "E": -0.7455,
+              "disagreement": 0.0,
+              "per_agent": {
+                "Radiologist": 0.1,
+                "Cardiologist": 0.1,
+                "Oncologist": 0.1,
+                "Generalist": 0.1502
+              }
+            }
+          ]
+        }
+      ],
+      "consensus": [
+        {
+          "dx": "Benign pulmonary granuloma",
+          "icd10": "D14.30",
+          "S": 0.5177,
+          "S_star": 0.594,
+          "E": 0.5632,
+          "disagreement": 0.0279,
+          "per_agent": {
+            "Radiologist": 0.722,
+            "Cardiologist": 0.1,
+            "Oncologist": 0.475,
+            "Generalist": 0.1
+          },
+          "red_flag": false,
+          "n_support": 3,
+          "n_refute": 0
+        },
+        {
+          "dx": "Pulmonary embolism",
+          "icd10": "I26.99",
+          "S": 0.1933,
+          "S_star": 0.1577,
+          "E": -0.4496,
+          "disagreement": 0.0,
+          "per_agent": {
+            "Radiologist": 0.17,
+            "Cardiologist": 0.256,
+            "Oncologist": 0.17,
+            "Generalist": 0.17
+          },
+          "red_flag": true,
+          "n_support": 1,
+          "n_refute": 2
+        },
+        {
+          "dx": "Congestive heart failure",
+          "icd10": "I50.9",
+          "S": 0.1172,
+          "S_star": 0.0948,
+          "E": -0.4308,
+          "disagreement": 0.0,
+          "per_agent": {
+            "Radiologist": 0.1,
+            "Cardiologist": 0.1634,
+            "Oncologist": 0.1,
+            "Generalist": 0.1
+          },
+          "red_flag": false,
+          "n_support": 1,
+          "n_refute": 2
+        },
+        {
+          "dx": "Community-acquired pneumonia",
+          "icd10": "J18.9",
+          "S": 0.1078,
+          "S_star": 0.0742,
+          "E": -0.7455,
+          "disagreement": 0.0,
+          "per_agent": {
+            "Radiologist": 0.1,
+            "Cardiologist": 0.1,
+            "Oncologist": 0.1,
+            "Generalist": 0.1502
+          },
+          "red_flag": false,
+          "n_support": 0,
+          "n_refute": 3
+        }
+      ],
+      "red_flags": {},
+      "ledger_size": 15,
+      "groundedness_pass_rate": 1.0,
+      "claims_checked": 23,
+      "top1_hit": true,
+      "top3_hit": true,
+      "report_path": "output/report_CASE-002.md",
+      "transcript_path": "output/transcript_CASE-002.md"
+    },
+    {
+      "case_id": "CASE-003",
+      "gold_dx": "Acute coronary syndrome",
+      "status": "escalated",
+      "reason": "can't-miss diagnosis 'Acute coronary syndrome' at S*=0.55 \u2265 \u03c4_flag=0.30",
+      "rounds": [
+        {
+          "round": 0,
+          "D_bar": 0.00373,
+          "retrievals": 8,
+          "top": [
+            {
+              "dx": "Acute coronary syndrome",
+              "S": 0.5946,
+              "S_star": 0.5397,
+              "E": -0.407,
+              "disagreement": 0.0,
+              "per_agent": {
+                "Radiologist": 0.17,
+                "Cardiologist": 0.8455,
+                "Oncologist": 0.17,
+                "Generalist": 0.17
+              }
+            },
+            {
+              "dx": "Demand ischemia (type 2 MI)",
+              "S": 0.4125,
+              "S_star": 0.3919,
+              "E": -0.1553,
+              "disagreement": 0.0112,
+              "per_agent": {
+                "Radiologist": 0.1,
+                "Cardiologist": 0.525,
+                "Oncologist": 0.1,
+                "Generalist": 0.3318
+              }
+            },
+            {
+              "dx": "Pulmonary embolism",
+              "S": 0.3255,
+              "S_star": 0.3605,
+              "E": 0.2825,
+              "disagreement": 0.0,
+              "per_agent": {
+                "Radiologist": 0.17,
+                "Cardiologist": 0.4174,
+                "Oncologist": 0.17,
+                "Generalist": 0.17
+              }
+            },
+            {
+              "dx": "Cardiac tamponade",
+              "S": 0.1269,
+              "S_star": 0.1339,
+              "E": 0.112,
+              "disagreement": 0.00014,
+              "per_agent": {
+                "Radiologist": 0.17,
+                "Cardiologist": 0.1219,
+                "Oncologist": 0.17,
+                "Generalist": 0.1043
+              }
+            },
+            {
+              "dx": "Congestive heart failure",
+              "S": 0.1398,
+              "S_star": 0.1138,
+              "E": -0.4296,
+              "disagreement": 0.0,
+              "per_agent": {
+                "Radiologist": 0.1,
+                "Cardiologist": 0.1634,
+                "Oncologist": 0.1,
+                "Generalist": 0.1
+              }
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "D_bar": 0.00341,
+          "retrievals": 9,
+          "top": [
+            {
+              "dx": "Acute coronary syndrome",
+              "S": 0.6014,
+              "S_star": 0.5467,
+              "E": -0.407,
+              "disagreement": 0.0,
+              "per_agent": {
+                "Radiologist": 0.17,
+                "Cardiologist": 0.84,
+                "Oncologist": 0.17,
+                "Generalist": 0.17
+              }
+            },
+            {
+              "dx": "Demand ischemia (type 2 MI)",
+              "S": 0.4202,
+              "S_star": 0.3996,
+              "E": -0.1553,
+              "disagreement": 0.01023,
+              "per_agent": {
+                "Radiologist": 0.1,
+                "Cardiologist": 0.525,
+                "Oncologist": 0.1,
+                "Generalist": 0.3318
+              }
+            },
+            {
+              "dx": "Pulmonary embolism",
+              "S": 0.3293,
+              "S_star": 0.3645,
+              "E": 0.2825,
+              "disagreement": 0.0,
+              "per_agent": {
+                "Radiologist": 0.17,
+                "Cardiologist": 0.4174,
+                "Oncologist": 0.17,
+                "Generalist": 0.17
+              }
+            },
+            {
+              "dx": "Cardiac tamponade",
+              "S": 0.1258,
+              "S_star": 0.1328,
+              "E": 0.112,
+              "disagreement": 0.00012,
+              "per_agent": {
+                "Radiologist": 0.17,
+                "Cardiologist": 0.1219,
+                "Oncologist": 0.17,
+                "Generalist": 0.1043
+              }
+            },
+            {
+              "dx": "Congestive heart failure",
+              "S": 0.1408,
+              "S_star": 0.1146,
+              "E": -0.4296,
+              "disagreement": 0.0,
+              "per_agent": {
+                "Radiologist": 0.1,
+                "Cardiologist": 0.1634,
+                "Oncologist": 0.1,
+                "Generalist": 0.1
+              }
+            }
+          ]
+        }
+      ],
+      "consensus": [
+        {
+          "dx": "Acute coronary syndrome",
+          "icd10": "I24.9",
+          "S": 0.6014,
+          "S_star": 0.5467,
+          "E": -0.407,
+          "disagreement": 0.0,
+          "per_agent": {
+            "Radiologist": 0.17,
+            "Cardiologist": 0.84,
+            "Oncologist": 0.17,
+            "Generalist": 0.17
+          },
+          "red_flag": true,
+          "n_support": 1,
+          "n_refute": 2
+        },
+        {
+          "dx": "Demand ischemia (type 2 MI)",
+          "icd10": "I21.A1",
+          "S": 0.4202,
+          "S_star": 0.3996,
+          "E": -0.1553,
+          "disagreement": 0.01023,
+          "per_agent": {
+            "Radiologist": 0.1,
+            "Cardiologist": 0.525,
+            "Oncologist": 0.1,
+            "Generalist": 0.3318
+          },
+          "red_flag": false,
+          "n_support": 2,
+          "n_refute": 2
+        },
+        {
+          "dx": "Pulmonary embolism",
+          "icd10": "I26.99",
+          "S": 0.3293,
+          "S_star": 0.3645,
+          "E": 0.2825,
+          "disagreement": 0.0,
+          "per_agent": {
+            "Radiologist": 0.17,
+            "Cardiologist": 0.4174,
+            "Oncologist": 0.17,
+            "Generalist": 0.17
+          },
+          "red_flag": true,
+          "n_support": 2,
+          "n_refute": 1
+        },
+        {
+          "dx": "Cardiac tamponade",
+          "icd10": "I31.4",
+          "S": 0.1258,
+          "S_star": 0.1328,
+          "E": 0.112,
+          "disagreement": 0.00012,
+          "per_agent": {
+            "Radiologist": 0.17,
+            "Cardiologist": 0.1219,
+            "Oncologist": 0.17,
+            "Generalist": 0.1043
+          },
+          "red_flag": true,
+          "n_support": 2,
+          "n_refute": 2
+        },
+        {
+          "dx": "Congestive heart failure",
+          "icd10": "I50.9",
+          "S": 0.1408,
+          "S_star": 0.1146,
+          "E": -0.4296,
+          "disagreement": 0.0,
+          "per_agent": {
+            "Radiologist": 0.1,
+            "Cardiologist": 0.1634,
+            "Oncologist": 0.1,
+            "Generalist": 0.1
+          },
+          "red_flag": false,
+          "n_support": 1,
+          "n_refute": 2
+        },
+        {
+          "dx": "Community-acquired pneumonia",
+          "icd10": "J18.9",
+          "S": 0.1168,
+          "S_star": 0.0968,
+          "E": -0.3818,
+          "disagreement": 0.0,
+          "per_agent": {
+            "Radiologist": 0.1,
+            "Cardiologist": 0.1,
+            "Oncologist": 0.1,
+            "Generalist": 0.1502
+          },
+          "red_flag": false,
+          "n_support": 1,
+          "n_refute": 2
+        }
+      ],
+      "red_flags": {
+        "Acute coronary syndrome": 0.5467,
+        "Pulmonary embolism": 0.3645
+      },
+      "ledger_size": 24,
+      "groundedness_pass_rate": 1.0,
+      "claims_checked": 26,
+      "top1_hit": true,
+      "top3_hit": true,
+      "report_path": "output/report_CASE-003.md",
+      "transcript_path": "output/transcript_CASE-003.md"
+    }
+  ],
+  "summary": {
+    "n_cases": 3,
+    "top1": 1.0,
+    "top3": 1.0,
+    "ece": 0.2434,
+    "brier": 0.0766,
+    "groundedness": 1.0
+  },
+  "calibration_pairs": [
+    [
+      0.7918,
+      1
+    ],
+    [
+      0.4771,
+      0
+    ],
+    [
+      0.3324,
+      0
+    ],
+    [
+      0.3309,
+      0
+    ],
+    [
+      0.2705,
+      0
+    ],
+    [
+      0.2649,
+      0
+    ],
+    [
+      0.2415,
+      0
+    ],
+    [
+      0.1075,
+      0
+    ],
+    [
+      0.0982,
+      0
+    ],
+    [
+      0.594,
+      1
+    ],
+    [
+      0.1577,
+      0
+    ],
+    [
+      0.0948,
+      0
+    ],
+    [
+      0.0742,
+      0
+    ],
+    [
+      0.5467,
+      1
+    ],
+    [
+      0.3996,
+      0
+    ],
+    [
+      0.3645,
+      0
+    ],
+    [
+      0.1328,
+      0
+    ],
+    [
+      0.1146,
+      0
+    ],
+    [
+      0.0968,
+      0
+    ]
+  ]
+}
