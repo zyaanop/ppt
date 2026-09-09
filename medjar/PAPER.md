@@ -416,24 +416,70 @@ independently of a language model's variability.
 | `report.py` | report and transcript renderers | |
 | `cases.py` | three synthetic cases with reference diagnoses | |
 
-**Reasoning back-ends.** `RuleBasedEngine` scores hypotheses from persona-specific
-`DxRule`s (positive features, contraindicating features, required confirmation,
-discriminating test) via a logistic form. It is a *stand-in for an LLM*, not a claim
-about clinical reasoning; its purpose is reproducibility. `LLMEngine` is the
-production path: it renders persona plus retrieved passages into a prompt, calls an
-injected adapter, and parses the reasoning contract. Swapping engines changes nothing
-else in the system.
+**Reasoning back-ends.** Two interchangeable engines satisfy one interface —
+`hypotheses(cco, passages)` and `prior_for(dx)`:
+
+- `RuleBasedEngine` scores hypotheses from persona-specific `DxRule`s (positive
+  features, contraindicating features, required confirmation, discriminating test)
+  via a logistic form. It is a *stand-in for a language model*, not a claim about
+  clinical reasoning; its purpose is reproducibility, so that the debate and
+  consensus mathematics can be verified without model variability.
+- `LLMEngine` is the production path (`medjar/llm.py`, `medjar/personas.py`). It
+  renders the persona and the retrieved passages into a prompt, calls an injected
+  adapter, and parses the reasoning contract. Adapters ship for any
+  OpenAI-compatible `/chat/completions` endpoint, for Anthropic `/v1/messages`, and
+  for local servers (e.g. Ollama) via `base_url` — all over `urllib`, preserving the
+  zero-dependency property.
+
+`prior_for` is not incidental: the existence of a prior is what licenses an agent to
+raise an *overcall* critique (§4.5). Under the LLM engine, a prior exists if the model
+actually reasoned about that diagnosis or if the diagnosis falls in the agent's own
+domain, so the competence rule of §6.4b survives the swap.
+
+**Three invariants are enforced in code rather than trusted to the model:**
+
+1. **Citations must be real.** A `citation_id` not among the passages offered in the
+   prompt is discarded, so a hallucinated reference cannot enter the Evidence Ledger.
+   Surviving citations are additionally required to pass the entailment gate.
+2. **Failure is not silence.** A malformed response costs one agent its turn. But a
+   *configuration* failure (missing credentials, rejected auth) is raised immediately,
+   and if the ensemble produces no substantive hypothesis at all the orchestrator
+   refuses to emit a report and escalates: an empty differential must never be
+   presented as a negative finding. `run_demo.py` exits non-zero in that case.
+3. **Likelihoods are clamped and coerced**, and diagnoses are reconciled against the
+   registry so the hypothesis space stays comparable across agents.
 
 **Reproducing the results.**
 
 ```bash
 cd prototype  && python3 run_demo.py        # writes output/report_*.md, trace.json
+                 python3 verify_llm_path.py # exercises the LLM path offline
 cd ../figures && python3 make_figures.py    # regenerates all 14 figures
                  python3 check_layout.py    # geometric validation of the figures
 ```
 
+To run the specialists on a real model:
+
+```bash
+OPENAI_API_KEY=…    python3 run_demo.py --engine llm --provider openai --model gpt-4o-mini
+ANTHROPIC_API_KEY=… python3 run_demo.py --engine llm --provider anthropic
+                    python3 run_demo.py --engine llm --provider ollama --model llama3.1
+```
+
 Result figures are computed from `prototype/output/trace.json`, so the paper's
 numbers and its plots cannot drift apart.
+
+**Verification of the LLM path.** The reported results use the rule engine, so the
+LLM path would otherwise ship unexecuted. `verify_llm_path.py` drives it end to end
+with a scripted adapter substituted for the provider: prompt construction, the adapter
+boundary, contract parsing (including fenced JSON, leading prose and trailing-comma
+repair), citation validation, grounding, debate, consensus and report rendering all
+run for real — only the HTTP hop is replaced. It asserts the safety guards explicitly:
+a never-offered citation id is dropped and never reaches the ledger; a diagnosis the
+model ignored grants no competence to critique; malformed output degrades to an empty
+differential rather than aborting; and every reported claim is entailed by its
+citation. All 19 checks pass. **No live provider call was made in preparing this
+report**, so the adapters are verified structurally, not against a live endpoint.
 
 ---
 

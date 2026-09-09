@@ -78,6 +78,22 @@ class ChiefOfService:
         turns = [a.propose(cco, self.retriever, self.verifier, ledger, round_no=0)
                  for a in self.agents]
         self._align(cco, turns)
+
+        # An ensemble that produced no substantive hypothesis has not reached a
+        # negative finding — it has failed. Reporting an empty differential
+        # would present that failure as reassurance, so refuse and escalate.
+        if not any(not h.is_floor for t in turns for h in t.hypotheses):
+            errs = [f"{a.name}: {e}" for a in self.agents
+                    for e in [getattr(a.engine, "last_error", None)] if e]
+            detail = ("; ".join(errs) if errs
+                      else "no agent proposed a hypothesis above threshold")
+            return CaseOutcome(
+                case_id=cco.case_id, status="escalated",
+                reason=f"no differential could be produced ({detail})",
+                rounds=[RoundRecord(0, 0.0, [], turns, self.retriever.calls)],
+                consensus=[], ledger=ledger, red_flags={},
+                open_disagreements=[])
+
         items = self.consensus.aggregate(turns, ledger)
         d_bar = self.consensus.d_bar(items)
         rounds.append(RoundRecord(0, d_bar, items[:5], turns, self.retriever.calls))

@@ -18,12 +18,12 @@ reasoning contract. The rest of the system is unchanged by the swap.
 """
 from __future__ import annotations
 
-import json
 import math
 from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 from .consensus import specialty_weight
+from .llm import LLMConfigError, extract_json
 from .retrieval import HybridRetriever
 from .schemas import (
     CCO, DX_REGISTRY, RED_FLAG_DX, AgentTurn, Claim, Critique, Hypothesis,
@@ -162,13 +162,30 @@ GENERALIST_RULES = (
 # ---------------------------------------------------------------------------
 # Reasoning engines
 # ---------------------------------------------------------------------------
+@dataclass(frozen=True)
+class PriorInfo:
+    """What an engine exposes about a prior it holds for a diagnosis.
+
+    `DxRule` satisfies the same interface, so the rule-based and LLM engines are
+    interchangeable from the agent's point of view. The existence of a prior is
+    what licenses an agent to raise an `overcall` critique (Sec. 4.5), so this
+    must be answerable by every back-end.
+    """
+    dx: str
+    needs: Optional[str] = None
+    query: str = ""
+
+
 class RuleBasedEngine:
     """Deterministic, offline reasoning over a persona's DxRules."""
+
+    needs_context = False          # does not require retrieved passages
 
     def __init__(self, rules: Sequence[DxRule]):
         self.rules = tuple(rules)
 
-    def hypotheses(self, cco: CCO) -> List[Hypothesis]:
+    def hypotheses(self, cco: CCO,
+                   passages: Sequence[Passage] = ()) -> List[Hypothesis]:
         out: List[Hypothesis] = []
         for r in self.rules:
             p = r.likelihood(cco)
@@ -186,44 +203,153 @@ class RuleBasedEngine:
                 return r
         return None
 
+    def prior_for(self, dx: str) -> Optional[DxRule]:
+        return self.rule_for(dx)
+
 
 class LLMEngine:
-    """Production reasoning path: prompt an LLM, parse the reasoning contract.
+    """Production reasoning path: prompt a model, parse the reasoning contract.
 
-    `adapter` is any callable (system_prompt, user_prompt) -> str returning JSON
-    that conforms to the contract in Sec. 4.3. Not exercised in the offline demo.
+    `adapter` is any callable (system_prompt, user_prompt) -> str; see
+    medjar.llm for OpenAI-compatible, Anthropic and offline implementations.
+
+    Three invariants are enforced here rather than trusted to the model:
+
+    1. **Citations must be real.** A citation_id not among the passages offered
+       to the model is dropped, so a hallucinated reference cannot enter the
+       Evidence Ledger.
+    2. **Likelihoods are clamped** to [0.02, 0.97] and coerced to float.
+    3. **Competence is recorded.** The diagnoses the model actually reasoned
+       about become this persona's priors, which is what licenses it to raise
+       overcall critiques (Sec. 4.5, and the failure mode in Sec. 6.4b).
+
+    A malformed or failed response degrades to an empty differential rather than
+    raising: one agent losing its turn must not abort the case.
     """
 
-    CONTRACT = (
-        'Return ONLY JSON: {"differential":[{"dx":str,"likelihood":float,'
-        '"supporting":[{"claim":str,"citation_id":str}],'
-        '"refuting":[{"claim":str,"citation_id":str}],'
-        '"discriminating_test":str}],"red_flags":[str],"confidence":float}'
-    )
+    needs_context = True           # requires retrieved passages in the prompt
 
-    def __init__(self, persona: str, adapter: Callable[[str, str], str]):
-        self.persona = persona
+    def __init__(self, specialty: str, adapter: Callable[[str, str], str],
+                 system_prompt: Optional[str] = None, persona: Optional[str] = None,
+                 max_dx: int = 6, strict: bool = False):
+        from .personas import render_system          # local: avoids a cycle
+        # `specialty` is the clinical domain used for competence weighting;
+        # `persona` selects the prompt identity and may be worded differently.
+        self.specialty = specialty
+        self.persona = persona or specialty
         self.adapter = adapter
+        self.system = system_prompt or render_system(self.persona)
+        self.max_dx = max_dx
+        self.strict = strict
+        self._priors: Dict[str, PriorInfo] = {}
+        self.last_error: Optional[str] = None
+        self.last_raw: str = ""
+        self.dropped_citations: int = 0
 
-    def hypotheses(self, cco: CCO, passages: Sequence[Passage] = ()) -> List[Hypothesis]:
-        ctx = "\n".join(f"[{p.pid}] {p.text}" for p in passages)
-        user = (f"CASE\n{cco.presentation}\nFEATURES: {', '.join(cco.findings)}\n\n"
-                f"RETRIEVED EVIDENCE\n{ctx}\n\n{self.CONTRACT}")
-        raw = self.adapter(self.persona, user)
-        data = json.loads(raw)
+    # -- prompt ----------------------------------------------------------
+    def render_user(self, cco: CCO, passages: Sequence[Passage]) -> str:
+        ev = "\n".join(
+            f"[{p.pid}] ({p.source} — {p.section}, {p.publish_year}, "
+            f"grade {p.evidence_grade}) {p.text}" for p in passages
+        ) or "(no passages retrieved)"
+        present = ", ".join(f.replace("_", " ") for f in cco.findings) or "none recorded"
+        absent = ", ".join(f.replace("_", " ") for f in cco.absent) or "none recorded"
+        labs = "; ".join(
+            f"{l.get('name')} {l.get('value')} {l.get('unit', '')}"
+            f" (ref {l.get('ref', '?')}, {l.get('flag', '?')})" for l in cco.labs
+        ) or "none"
+        imaging = "; ".join(
+            f"{i.get('modality')}: {i.get('finding')}" for i in cco.imaging
+        ) or "none"
+        return (
+            f"CASE {cco.case_id} — {cco.age}{cco.sex}\n\n"
+            f"PRESENTATION\n{cco.presentation}\n\n"
+            f"FEATURES PRESENT\n{present}\n\n"
+            f"FEATURES EXPLICITLY ABSENT (recorded as negative, not merely "
+            f"unassessed)\n{absent}\n\n"
+            f"LABORATORY\n{labs}\n\nIMAGING\n{imaging}\n\n"
+            f"RETRIEVED EVIDENCE — cite only these ids\n{ev}\n"
+        )
+
+    # -- inference -------------------------------------------------------
+    def hypotheses(self, cco: CCO,
+                   passages: Sequence[Passage] = ()) -> List[Hypothesis]:
+        offered = {p.pid for p in passages}
+        self.last_error = None
+        try:
+            self.last_raw = self.adapter(self.system,
+                                         self.render_user(cco, passages))
+            data = extract_json(self.last_raw)
+        except LLMConfigError:
+            # misconfiguration is never survivable: surface it immediately
+            # rather than emitting an empty differential that looks like a
+            # considered opinion
+            raise
+        except Exception as e:                       # noqa: BLE001
+            self.last_error = f"{type(e).__name__}: {e}"
+            if self.strict:
+                raise
+            return []
+
         out: List[Hypothesis] = []
-        for d in data.get("differential", []):
-            icd = DX_REGISTRY.get(d["dx"], ("?", "general"))[0]
-            out.append(Hypothesis(
-                dx=d["dx"], icd10=icd, likelihood=float(d["likelihood"]),
-                discriminating_test=d.get("discriminating_test", ""),
-                supporting=[Claim(c["claim"], c.get("citation_id"), "support")
-                            for c in d.get("supporting", [])],
-                refuting=[Claim(c["claim"], c.get("citation_id"), "refute")
-                          for c in d.get("refuting", [])],
-            ))
+        for d in (data.get("differential") or [])[: self.max_dx]:
+            if not isinstance(d, dict):
+                continue
+            dx = str(d.get("dx", "")).strip()
+            if not dx:
+                continue
+            try:
+                p = float(d.get("likelihood", 0.0))
+            except (TypeError, ValueError):
+                continue
+            p = round(min(max(p, 0.02), 0.97), 4)
+            icd, _domain = DX_REGISTRY.get(dx, ("?", "general"))
+            h = Hypothesis(
+                dx=dx, icd10=icd, likelihood=p,
+                discriminating_test=str(d.get("discriminating_test", "")).strip(),
+                supporting=self._claims(d.get("supporting"), "support", offered),
+                refuting=self._claims(d.get("refuting"), "refute", offered),
+            )
+            out.append(h)
+            self._priors[dx] = PriorInfo(dx=dx, needs=None, query=dx)
+
+        for flag in (data.get("red_flags") or []):
+            dx = str(flag).strip()
+            if dx and dx not in self._priors:
+                # the model considered it enough to flag it: that is a prior
+                self._priors[dx] = PriorInfo(dx=dx, needs=None, query=dx)
+
         out.sort(key=lambda h: -h.likelihood)
         return out
+
+    def _claims(self, raw, polarity: str, offered) -> List[Claim]:
+        out: List[Claim] = []
+        for c in (raw or []):
+            if not isinstance(c, dict):
+                continue
+            text = str(c.get("claim", "")).strip()
+            cid = str(c.get("citation_id", "")).strip()
+            if not text:
+                continue
+            if cid not in offered:
+                self.dropped_citations += 1      # hallucinated or absent id
+                continue
+            out.append(Claim(text=text, citation_id=cid, polarity=polarity))
+        return out
+
+    # -- competence ------------------------------------------------------
+    def prior_for(self, dx: str) -> Optional[PriorInfo]:
+        """A prior exists if the model reasoned about this dx, or it is in the
+        agent's own clinical domain."""
+        hit = self._priors.get(dx)
+        if hit is not None:
+            return hit
+        if DX_REGISTRY.get(dx, ("", "general"))[1] == self.specialty:
+            return PriorInfo(dx=dx, needs=None, query=dx)
+        return None
+
+    def rule_for(self, dx: str) -> Optional[PriorInfo]:   # interface parity
+        return self.prior_for(dx)
 
 
 # ---------------------------------------------------------------------------
@@ -231,12 +357,16 @@ class LLMEngine:
 # ---------------------------------------------------------------------------
 class SpecialistAgent:
     def __init__(self, name: str, specialty: str, scope: Sequence[str],
-                 rules: Sequence[DxRule], temperature: float = 1.25):
+                 rules: Sequence[DxRule] = (), temperature: float = 1.25,
+                 engine: Optional[object] = None, context_k: int = 6):
         self.name = name
         self.specialty = specialty
         self.scope = tuple(scope)
-        self.engine = RuleBasedEngine(rules)
+        # Injecting an engine is how the production LLM path is enabled; the
+        # rest of the system is identical under either back-end.
+        self.engine = engine if engine is not None else RuleBasedEngine(rules)
         self.temperature = temperature        # calibration temperature
+        self.context_k = context_k            # passages offered to an LLM engine
         self._state: Dict[str, Hypothesis] = {}
         self._ceiling: Dict[str, float] = {}
 
@@ -244,8 +374,12 @@ class SpecialistAgent:
     def propose(self, cco: CCO, retriever: HybridRetriever,
                 verifier: GroundednessVerifier, ledger: List[LedgerEntry],
                 round_no: int = 0) -> AgentTurn:
-        hyps = self.engine.hypotheses(cco)
+        context = self._context(cco, retriever)
+        hyps = self.engine.hypotheses(cco, context)
         for h in hyps:
+            # claims the model itself made are validated and ledgered first,
+            # then retrieval adds independently verified evidence
+            self._register_engine_claims(h, cco, context, verifier, ledger)
             self._attach_evidence(h, cco, retriever, verifier, ledger)
         self._state = {h.dx: h for h in hyps}
         # Reinforcement ceiling: consolidation may restore a position toward the
@@ -283,7 +417,7 @@ class SpecialistAgent:
             if turn.agent == self.name:
                 continue
             for h in turn.hypotheses:
-                my_rule = self.engine.rule_for(h.dx)
+                my_rule = self.engine.prior_for(h.dx)
                 my_p = self._state[h.dx].likelihood if h.dx in self._state else None
                 # A critique carries only as much force as the critic's competence
                 # over that hypothesis's domain (the same w_i(h) used in Eq. 1).
@@ -339,7 +473,7 @@ class SpecialistAgent:
             delta = c.severity * damp
             h.likelihood = round(max(0.02, min(0.97, sigmoid(logit(h.likelihood) - 1.5 * delta))), 4)
             # targeted re-retrieval on the point of contention
-            rule = self.engine.rule_for(c.dx)
+            rule = self.engine.prior_for(c.dx)
             seed = (rule.query if rule else c.dx) + " " + c.kind.replace("_", " ")
             self._attach_evidence(h, cco, retriever, verifier, ledger, query=seed, k=2)
 
@@ -358,10 +492,51 @@ class SpecialistAgent:
         return self._turn(hyps, round_no, "rebut", cco)
 
     # -- helpers ----------------------------------------------------------
+    def _context(self, cco: CCO, retriever: HybridRetriever) -> List[Passage]:
+        """Passages offered to a context-hungry engine (the LLM path)."""
+        if not getattr(self.engine, "needs_context", False):
+            return []
+        hits = retriever.retrieve(cco.retrieval_text(), scope=self.scope,
+                                  top_k=self.context_k)
+        return [h.passage for h in hits]
+
+    def _register_engine_claims(self, h: Hypothesis, cco: CCO,
+                                context: Sequence[Passage],
+                                verifier: GroundednessVerifier,
+                                ledger: List[LedgerEntry]) -> None:
+        """Verify and ledger the claims an engine produced itself.
+
+        The engine has already discarded citation ids it was not offered; here we
+        additionally require entailment against the cited passage, and rewrite
+        the citation into a unique ledger id so provenance stays one-to-one.
+        """
+        if not context:
+            return
+        by_pid = {p.pid: p for p in context}
+        for bucket in (h.supporting, h.refuting):
+            kept: List[Claim] = []
+            for claim in bucket:
+                passage = by_pid.get(claim.citation_id or "")
+                verifier.verify(claim, passage)
+                if not claim.grounded or passage is None:
+                    continue
+                cid = f"{passage.pid}#{len(ledger) + 1:03d}"
+                claim.citation_id = cid
+                kept.append(claim)
+                ledger.append(LedgerEntry(
+                    citation_id=cid, case_id=cco.case_id, pid=passage.pid,
+                    source=passage.source, section=passage.section,
+                    publish_year=passage.publish_year,
+                    evidence_grade=passage.evidence_grade, passage=passage.text,
+                    used_by_agent=self.name, hypothesis=h.dx,
+                    polarity=claim.polarity,
+                    scores={"origin": 1.0}))     # asserted by the agent itself
+            bucket[:] = kept
+
     def _attach_evidence(self, h: Hypothesis, cco: CCO, retriever: HybridRetriever,
                          verifier: GroundednessVerifier, ledger: List[LedgerEntry],
                          query: Optional[str] = None, k: int = 3) -> None:
-        rule = self.engine.rule_for(h.dx)
+        rule = self.engine.prior_for(h.dx)
         q = query or ((rule.query if rule else h.dx) + " " + cco.retrieval_text()[:160])
         hits = retriever.retrieve(q, scope=self.scope, top_k=k)
         for hit in hits:
@@ -408,15 +583,42 @@ class SpecialistAgent:
             requests=reqs)
 
 
-def default_ensemble() -> List[SpecialistAgent]:
-    """The launch ensemble: three specialists plus a generalist."""
-    return [
-        SpecialistAgent("Radiologist", "radiology", ("radiology", "oncology"),
-                        RADIOLOGIST_RULES, temperature=1.20),
-        SpecialistAgent("Cardiologist", "cardiology", ("cardiology",),
-                        CARDIOLOGIST_RULES, temperature=1.28),
-        SpecialistAgent("Oncologist", "oncology", ("oncology",),
-                        ONCOLOGIST_RULES, temperature=1.24),
-        SpecialistAgent("Generalist", "general", ("general", "infectious", "cardiology"),
-                        GENERALIST_RULES, temperature=1.35),
-    ]
+#: name, specialty, retrieval scope, rule set, calibration temperature
+ENSEMBLE_SPEC: Tuple[Tuple[str, str, Tuple[str, ...], Tuple[DxRule, ...], float], ...] = (
+    ("Radiologist", "radiologist", ("radiology", "oncology"),
+     RADIOLOGIST_RULES, 1.20),
+    ("Cardiologist", "cardiologist", ("cardiology",), CARDIOLOGIST_RULES, 1.28),
+    ("Oncologist", "oncologist", ("oncology",), ONCOLOGIST_RULES, 1.24),
+    ("Generalist", "general", ("general", "infectious", "cardiology"),
+     GENERALIST_RULES, 1.35),
+)
+
+#: the specialty label an agent uses for competence weighting w_i(h); the
+#: persona key above is the prompt identity, which may differ in wording
+_WEIGHT_DOMAIN = {"radiologist": "radiology", "cardiologist": "cardiology",
+                  "oncologist": "oncology", "general": "general"}
+
+
+def default_ensemble(
+    adapter: Optional[Callable[[str, str], str]] = None,
+    context_k: int = 6,
+    strict: bool = False,
+) -> List[SpecialistAgent]:
+    """The launch ensemble: three specialists plus a generalist.
+
+    With no `adapter`, agents reason via the deterministic rule engine. Passing
+    an adapter (see medjar.llm) switches every agent to the LLM path; nothing
+    else in the pipeline changes.
+    """
+    agents: List[SpecialistAgent] = []
+    for name, persona, scope, rules, temp in ENSEMBLE_SPEC:
+        domain = _WEIGHT_DOMAIN[persona]
+        engine = None
+        if adapter is not None:
+            # w_i(h) is keyed on clinical domain; the persona selects the prompt
+            engine = LLMEngine(specialty=domain, persona=persona,
+                               adapter=adapter, strict=strict)
+        agents.append(SpecialistAgent(name, domain, scope, rules,
+                                      temperature=temp, engine=engine,
+                                      context_k=context_k))
+    return agents

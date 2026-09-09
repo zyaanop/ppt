@@ -1,5 +1,7 @@
 {
   "version": "0.1.0",
+  "engine": "rule-based (offline, deterministic)",
+  "llm_calls": 0,
   "cases": [
     {
       "case_id": "CASE-001",
@@ -530,6 +532,7 @@
       "ledger_size": 52,
       "groundedness_pass_rate": 1.0,
       "claims_checked": 81,
+      "engine_errors": [],
       "top1_hit": true,
       "top3_hit": true,
       "report_path": "output/report_CASE-001.md",
@@ -793,6 +796,7 @@
       "ledger_size": 15,
       "groundedness_pass_rate": 1.0,
       "claims_checked": 23,
+      "engine_errors": [],
       "top1_hit": true,
       "top3_hit": true,
       "report_path": "output/report_CASE-002.md",
@@ -1060,6 +1064,7 @@
       "ledger_size": 24,
       "groundedness_pass_rate": 1.0,
       "claims_checked": 26,
+      "engine_errors": [],
       "top1_hit": true,
       "top3_hit": true,
       "report_path": "output/report_CASE-003.md",

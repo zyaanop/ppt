@@ -12,10 +12,15 @@ medical device, produces no clinical advice, and must not be used for care.
 """
 from __future__ import annotations
 
-from . import cases
+from . import cases, personas
 from .agents import (
-    CARDIOLOGIST_RULES, GENERALIST_RULES, ONCOLOGIST_RULES, RADIOLOGIST_RULES,
-    DxRule, LLMEngine, RuleBasedEngine, SpecialistAgent, default_ensemble,
+    CARDIOLOGIST_RULES, ENSEMBLE_SPEC, GENERALIST_RULES, ONCOLOGIST_RULES,
+    RADIOLOGIST_RULES, DxRule, LLMEngine, PriorInfo, RuleBasedEngine,
+    SpecialistAgent, default_ensemble,
+)
+from .llm import (
+    AnthropicAdapter, LLMError, OpenAIAdapter, ScriptedAdapter, build_adapter,
+    extract_json,
 )
 from .consensus import (
     ConsensusEngine, brier, expected_calibration_error, specialty_weight,
@@ -31,10 +36,12 @@ __version__ = "0.1.0"
 
 __all__ = [
     "CCO", "CaseOutcome", "ConsensusItem", "DX_REGISTRY", "RED_FLAG_DX",
-    "ChiefOfService", "ConsensusEngine", "SpecialistAgent", "DxRule",
+    "ChiefOfService", "ConsensusEngine", "SpecialistAgent", "DxRule", "PriorInfo",
     "RuleBasedEngine", "LLMEngine", "HybridRetriever", "BM25Index", "DenseIndex",
-    "GroundednessVerifier", "default_ensemble", "load_corpus", "render",
-    "render_transcript", "tokenize", "specialty_weight",
-    "expected_calibration_error", "brier", "cases",
+    "GroundednessVerifier", "default_ensemble", "ENSEMBLE_SPEC", "load_corpus",
+    "render", "render_transcript", "tokenize", "specialty_weight",
+    "expected_calibration_error", "brier", "cases", "personas",
     "RADIOLOGIST_RULES", "CARDIOLOGIST_RULES", "ONCOLOGIST_RULES", "GENERALIST_RULES",
+    "OpenAIAdapter", "AnthropicAdapter", "ScriptedAdapter", "build_adapter",
+    "extract_json", "LLMError",
 ]

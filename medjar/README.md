@@ -23,8 +23,9 @@ diagnosis is in play.
 | **[`presentation.html`](presentation.html)** | 30-slide seminar deck with every figure inlined. Self-contained: open it in any browser, works offline. |
 | **[`MedJar.pptx`](MedJar.pptx)** | 28-slide PowerPoint (text-only companion; the figures live in `figures/`). |
 | **[`figures/`](figures/)** | 14 vector figures + the generator that produces them. See [`figures/README.md`](figures/README.md) for the index. |
-| **[`prototype/`](prototype/)** | The runnable system. |
-| **[`prototype/output/`](prototype/output/) ** | Generated diagnostic reports, debate transcripts, and `trace.json`. |
+| **[`prototype/`](prototype/)** | The runnable system, including the LLM adapters. |
+| **[`prototype/output/`](prototype/output/)** | Generated diagnostic reports, debate transcripts, and `trace.json`. |
+| **[`index.html`](index.html)** | Landing page — published at [zyaanop.github.io/ppt/medjar/](https://zyaanop.github.io/ppt/medjar/). |
 
 ## The system in one figure
 
@@ -41,6 +42,7 @@ Requires **Python 3.9+ only** — no dependencies, no network, fully determinist
 
 ```bash
 cd prototype  && python3 run_demo.py       # run the system; writes output/ + trace.json
+                 python3 verify_llm_path.py# exercise the LLM path offline (19 checks)
 cd ../figures && python3 make_figures.py   # regenerate all 14 figures from that trace
                  python3 check_layout.py   # geometric validation of the figures
 cd ..         && python3 build_deck.py     # rebuild presentation.html (inlines the SVGs)
@@ -49,6 +51,39 @@ cd ..         && python3 build_deck.py     # rebuild presentation.html (inlines 
 
 Result figures are computed from `prototype/output/trace.json`, so the paper's numbers
 and its plots cannot drift apart.
+
+## Running the specialists on a real model
+
+The reported results use the deterministic rule engine so they are reproducible. To
+put actual language models behind the four personas, inject an adapter — nothing else
+in the pipeline changes:
+
+```bash
+OPENAI_API_KEY=…    python3 run_demo.py --engine llm --provider openai --model gpt-4o-mini
+ANTHROPIC_API_KEY=… python3 run_demo.py --engine llm --provider anthropic
+                    python3 run_demo.py --engine llm --provider ollama --model llama3.1
+python3 run_demo.py --engine llm --base-url http://localhost:8000/v1 --model my-model
+```
+
+Adapters cover any OpenAI-compatible `/chat/completions` endpoint, Anthropic
+`/v1/messages`, and local servers — all over `urllib`, so there are still no
+dependencies. Personas live in [`prototype/medjar/personas.py`](prototype/medjar/personas.py).
+
+Three things are enforced in code rather than trusted to the model:
+
+- **Citations must be real.** A `citation_id` the model was never offered is discarded,
+  so a hallucinated reference cannot reach the Evidence Ledger.
+- **Failure is not silence.** A malformed reply costs one agent its turn; a
+  *configuration* failure raises immediately, and if the ensemble yields no hypothesis
+  at all the orchestrator refuses to report and escalates. An empty differential must
+  never read as a negative finding — `run_demo.py` exits non-zero.
+- **Competence still gates critique.** A prior exists only if the model actually
+  reasoned about that diagnosis, or it is in the agent's own domain — so the safety
+  rule below survives the swap to LLMs.
+
+> **Note:** the LLM path is verified structurally by `verify_llm_path.py`, which
+> substitutes a scripted adapter for the provider and checks all of the above. No live
+> provider call was made in preparing this repository.
 
 ## What the prototype does
 

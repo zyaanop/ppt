@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MedJar — Consensus Diagnosis by Debating Specialist Agents</title>
+<meta name="description" content="A multi-agent consensus system for complex medical
+diagnosis: specialist LLM agents debate a case, ground claims in retrieved literature,
+and escalate to a clinician. Research prototype."/>
+<style>
+  :root{
+    --paper:#fbfaf8; --ink:#1b1b22; --ink2:#3f3f4a; --ink3:#6b6b76;
+    --faint:#a9a69c; --rule:#d8d4c8; --accent:#8a1524; --green:#2f6b3f;
+    --serif:'Iowan Old Style','Palatino Linotype',Palatino,'Book Antiqua',Georgia,serif;
+    --sans:'Helvetica Neue',Helvetica,Arial,system-ui,sans-serif;
+    --mono:'SF Mono',ui-monospace,Consolas,Menlo,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);
+    line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:7vh 6vw 12vh}
+  .kick{font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--accent);font-weight:700}
+  h1{font-family:var(--serif);font-weight:600;font-size:clamp(30px,5vw,54px);
+    line-height:1.08;letter-spacing:-.01em;margin:18px 0 0;max-width:24ch}
+  .rule{width:84px;height:4px;background:var(--accent);margin:26px 0}
+  .lead{font-family:var(--serif);font-size:clamp(16px,1.7vw,21px);color:var(--ink2);
+    max-width:64ch}
+  .note{margin-top:26px;border-left:3px solid var(--accent);background:#f4f2ec;
+    padding:14px 18px;font-size:14px;color:var(--ink2);max-width:70ch}
+  h2{font-family:var(--serif);font-weight:600;font-size:clamp(20px,2.4vw,30px);
+    margin:56px 0 4px}
+  h2:after{content:"";display:block;width:52px;height:3px;background:var(--accent);
+    margin-top:.4em}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:18px;margin-top:26px}
+  a.card{display:block;border:1px solid var(--rule);background:#fff;padding:20px;
+    text-decoration:none;color:inherit;transition:.18s}
+  a.card:hover{border-color:var(--accent);transform:translateY(-2px);
+    box-shadow:0 6px 18px rgba(0,0,0,.06)}
+  a.card h3{font-size:15px;font-weight:700;margin-bottom:6px}
+  a.card p{font-size:13.5px;color:var(--ink3);font-family:var(--serif)}
+  a.card .go{display:inline-block;margin-top:10px;font-size:12px;color:var(--accent);
+    font-weight:700;letter-spacing:.03em}
+  figure{margin:26px 0 0;border:1px solid var(--rule);background:#fff;padding:10px}
+  figure img{display:block;width:100%;height:auto}
+  figcaption{font-size:12.5px;color:var(--ink3);margin-top:10px;text-align:center}
+  table{width:100%;border-collapse:collapse;margin-top:22px}
+  th{text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--accent);border-bottom:1.5px solid var(--ink);padding:8px 10px}
+  td{font-family:var(--serif);font-size:15px;color:var(--ink2);
+    border-bottom:1px solid var(--rule);padding:8px 10px}
+  code{font-family:var(--mono);font-size:.88em;background:#f1eee7;padding:1px 5px;
+    border-radius:3px}
+  pre{margin-top:18px;background:#f1eee7;border:1px solid var(--rule);padding:16px;
+    overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;
+    color:var(--ink2)}
+  ul{margin-top:16px;list-style:none}
+  li{position:relative;padding-left:1.3em;margin:.5em 0;font-family:var(--serif);
+    font-size:16px;color:var(--ink2)}
+  li:before{content:"\2014";position:absolute;left:0;color:var(--accent);
+    font-family:var(--sans)}
+  footer{margin-top:68px;padding-top:20px;border-top:1px solid var(--rule);
+    font-size:12.5px;color:var(--faint)}
+  .green{color:var(--green);font-weight:700}
+  .acc{color:var(--accent);font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kick">Multi-Agent Clinical Reasoning · Research Prototype</div>
+  <h1>MedJar: Consensus Diagnosis by Debating Specialist Agents</h1>
+  <div class="rule"></div>
+  <p class="lead">Persona-conditioned language-model specialists reason independently
+  over a patient case, ground every claim in retrieved literature, and are driven
+  toward a calibrated, auditable diagnosis through structured debate — escalating to a
+  clinician when they cannot reconcile, or when a can't-miss diagnosis is in play.</p>
+
+  <div class="note"><strong>Research prototype.</strong> Evaluated on three
+  <em>synthetic</em> cases with a deterministic reasoner. Not a medical device, not
+  validated for care, and it produces no clinical advice. Reported numbers characterise
+  the system's mechanics, not diagnostic performance.</div>
+
+  <h2>Artefacts</h2>
+  <div class="cards">
+    <a class="card" href="presentation.html">
+      <h3>Seminar deck</h3>
+      <p>30 slides, every figure embedded. Runs in the browser, works offline.</p>
+      <span class="go">Open the deck →</span>
+    </a>
+    <a class="card" href="https://github.com/zyaanop/ppt/blob/main/medjar/PAPER.md">
+      <h3>Technical report</h3>
+      <p>Architecture, formalism, evaluation, failure modes, appendices.</p>
+      <span class="go">Read the paper →</span>
+    </a>
+    <a class="card" href="https://github.com/zyaanop/ppt/tree/main/medjar/prototype">
+      <h3>Prototype</h3>
+      <p>The runnable system. Python 3.9+, no dependencies, deterministic.</p>
+      <span class="go">Browse the code →</span>
+    </a>
+    <a class="card" href="https://github.com/zyaanop/ppt/blob/main/medjar/figures/README.md">
+      <h3>Figure set</h3>
+      <p>14 vector figures and the generator that produces them.</p>
+      <span class="go">See the figures →</span>
+    </a>
+  </div>
+
+  <h2>The system in one figure</h2>
+  <figure>
+    <img src="figures/fig02_workflow.svg" alt="MedJar end-to-end workflow across eight
+    lanes, showing steps 1 to 16, the PHI trust boundary, the debate loop, and both
+    escalation paths."/>
+    <figcaption><strong>Figure 2.</strong> Steps 1–16. De-identification happens in the
+    intake lane — nothing below the boundary carries a patient identifier. Agents
+    retrieve privately and never observe one another during proposal. The debate loop
+    (10–12) repeats while disagreement exceeds threshold and the round budget holds.
+    Both dispositions terminate in mandatory clinician sign-off.</figcaption>
+  </figure>
+
+  <h2>What the prototype does</h2>
+  <table>
+    <thead><tr><th>Case</th><th>Reference diagnosis</th><th>Leading S*</th>
+      <th>Rounds</th><th>Disposition</th></tr></thead>
+    <tbody>
+      <tr><td><code>CASE-001</code></td><td>Primary lung malignancy</td><td>0.79 ✓</td>
+        <td>4</td><td class="acc">escalated — can't-miss</td></tr>
+      <tr><td><code>CASE-002</code></td><td>Benign pulmonary granuloma</td><td>0.59 ✓</td>
+        <td>2</td><td class="green">converged</td></tr>
+      <tr><td><code>CASE-003</code></td><td>Acute coronary syndrome</td><td>0.55 ✓</td>
+        <td>1</td><td class="acc">escalated — can't-miss</td></tr>
+    </tbody>
+  </table>
+  <p class="lead" style="margin-top:20px;font-size:15px">Three cases exercising all
+  three stopping paths. Top-1 3/3 · 130/130 claims passed the groundedness gate ·
+  91 ledger citations · <strong>ECE 0.243</strong> — poor, and reported as a negative
+  result: the aggregation weights are hand-set, not fitted.</p>
+
+  <h2>Reproducing it</h2>
+  <pre>git clone https://github.com/zyaanop/ppt.git &amp;&amp; cd ppt/medjar
+
+cd prototype  &amp;&amp; python3 run_demo.py          # run the system
+                 python3 verify_llm_path.py     # verify the LLM path offline
+cd ../figures &amp;&amp; python3 make_figures.py      # regenerate all 14 figures
+cd ..         &amp;&amp; python3 build_deck.py         # rebuild this deck</pre>
+  <p class="lead" style="margin-top:16px;font-size:15px">To run the specialists on a
+  real model: <code>run_demo.py --engine llm --provider openai|anthropic|ollama</code>.</p>
+
+  <h2>The result worth reading</h2>
+  <p class="lead">Building the system exposed four failure modes. The significant one:
+  agents holding <strong>no prior</strong> in a diagnosis's domain were initially able to
+  raise objections using their own ignorance as the comparison. Three agents with no
+  cardiology competence drove a <em>correct</em> acute coronary syndrome diagnosis from
+  S* 0.84 to 0.27 — below the escalation threshold — so the case converged instead of
+  escalating, manufacturing exactly the false reassurance the system exists to
+  prevent.</p>
+  <ul>
+    <li>The fix is to tie the right to object to competence.</li>
+    <li>The lesson: <strong>aggregation rules, not agent count, determine whether an
+      ensemble is safe.</strong></li>
+    <li>An unweighted debate among heterogeneous agents can be <em>more</em> dangerous
+      than a single competent agent.</li>
+  </ul>
+
+  <footer>
+    MedJar · research prototype · decision support only. A licensed clinician remains
+    the decision-maker and is accountable for care.<br/>
+    Source: <a href="https://github.com/zyaanop/ppt/tree/main/medjar"
+    style="color:var(--accent)">github.com/zyaanop/ppt/medjar</a>
+  </footer>
+</div>
+</body>
+</html>
