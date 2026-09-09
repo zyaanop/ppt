@@ -11,29 +11,33 @@ import zipfile, html, datetime, os
 EMU = 914400                      # EMU per inch
 W, H = 12192000, 6858000          # 16:9 slide (13.333 x 7.5 in)
 
-# ---- palette (hex, no #) -------------------------------------------------
-BG   = "070B14"
-CARD = "101C33"
-INK  = "E9F1FF"
-DIM  = "9FB2CF"
-TEAL = "2FE0C8"
-BLUE = "4C8DFF"
-VIOL = "9B7BFF"
-AMB  = "FFB547"
+# ---- palette (hex, no #) — austere academic light theme ------------------
+BG     = "F6F4EE"   # warm paper background
+CARD   = "EFECE3"
+INK    = "1B1B22"   # near-black ink (titles, emphasis)
+DIM    = "3F3F4A"   # body text
+FAINT  = "8A8A96"   # footer / captions
+ACCENT = "8A1524"   # scholarly crimson (kicker, rule)
+SLATE  = "2F4B6E"   # secondary figure colour
+# legacy aliases kept so existing references resolve
+TEAL = ACCENT
+BLUE = SLATE
+VIOL = "6B6B76"
+AMB  = "B08322"
 
 def esc(t): return html.escape(str(t), quote=True)
 
 # ---- slide content model -------------------------------------------------
 # each slide: (kicker, title, [bullets]) ; bullets may be "" for spacing
 SLIDES = [
-    ("MULTI-AGENT CLINICAL AI",
-     "MedJar",
-     ["Medical Judgment via Agent Reasoning",
-      "Specialist LLM agents debate a patient's case, ground reasoning in",
-      "medical literature (RAG), and converge on one diagnostic report.",
+    ("MULTI-AGENT CLINICAL REASONING  ·  RESEARCH SEMINAR",
+     "MedJar: Consensus Diagnosis by Debating Specialist Agents",
+     ["Persona-conditioned language-model specialists reason independently over a",
+      "patient case, ground every claim in retrieved literature, and are driven toward",
+      "a calibrated, auditable diagnosis through structured debate.",
       "",
-      "Radiologist  •  Cardiologist  •  Oncologist  •  + extensible",
-      "Assistive  •  human-in-the-loop  •  not autonomous"]),
+      "Radiologist   ·   Cardiologist   ·   Oncologist   ·   extensible ensemble",
+      "Assistive   ·   human-in-the-loop   ·   not an autonomous diagnostic device"]),
     ("THE PROBLEM",
      "Complex diagnosis fails for structural reasons",
      ["~1 in 20 adults hit a diagnostic error — concentrated in complex cases",
@@ -158,8 +162,8 @@ SLIDES = [
 # ---- XML builders --------------------------------------------------------
 def solid(hexc):  return f'<a:solidFill><a:srgbClr val="{hexc}"/></a:solidFill>'
 
-def run(text, size, color, bold=False, mono=False):
-    face = "Consolas" if mono else "Segoe UI"
+def run(text, size, color, bold=False, mono=False, serif=False):
+    face = "Consolas" if mono else ("Georgia" if serif else "Calibri")
     b = ' b="1"' if bold else ''
     return (f'<a:r><a:rPr lang="en-US" sz="{size}"{b} dirty="0">'
             f'{solid(color)}<a:latin typeface="{face}"/></a:rPr>'
@@ -167,8 +171,9 @@ def run(text, size, color, bold=False, mono=False):
 
 def para(runs_xml, bullet=False, color=DIM, size=1600, spc=600):
     if bullet:
-        pr = (f'<a:pPr marL="285750" indent="-285750"><a:spcBef><a:spcPts val="{spc}"/></a:spcBef>'
-              f'<a:buFont typeface="Arial"/><a:buChar char="&#8226;"/></a:pPr>')
+        pr = (f'<a:pPr marL="342900" indent="-342900"><a:spcBef><a:spcPts val="{spc}"/></a:spcBef>'
+              f'<a:buClr><a:srgbClr val="{ACCENT}"/></a:buClr>'
+              f'<a:buFont typeface="Arial"/><a:buChar char="&#8211;"/></a:pPr>')
     else:
         pr = f'<a:pPr><a:spcBef><a:spcPts val="{spc}"/></a:spcBef></a:pPr>'
     return f'<a:p>{pr}{runs_xml}</a:p>'
@@ -198,34 +203,31 @@ def slide_xml(idx, kicker, title, bullets):
     sid = 10
     # background
     bg = f'<p:bg><p:bgPr>{solid(BG)}<a:effectLst/></p:bgPr></p:bg>'
-    # accent bar (top)
-    shapes.append(rect(sid, "accent", 0, 0, W, 68580, TEAL)); sid+=1
-    # decorative side card for content slides
-    if not is_title:
-        shapes.append(rect(sid, "sidebar", 11330000, 500000, 45720, 5800000, BLUE)); sid+=1
-    # kicker
-    shapes.append(shape(sid, "kicker", 640000, 520000, 9000000, 500000,
-        txbody([para(run(kicker, 1300, TEAL, bold=True, mono=True), size=1300, spc=0)]))); sid+=1
-    # title
-    tsize = 5400 if is_title else 3200
-    tcolor = TEAL if is_title else INK
-    shapes.append(shape(sid, "title", 640000, 980000, 10600000, 1500000 if is_title else 1300000,
-        txbody([para(run(title, tsize, tcolor, bold=True), size=0)]))); sid+=1
-    # body bullets
+    # thin crimson rule under the header region
+    shapes.append(rect(sid, "rule", 640000, 1030000, 620000, 34000, ACCENT)); sid+=1
+    # kicker (running section label)
+    shapes.append(shape(sid, "kicker", 640000, 540000, 10000000, 460000,
+        txbody([para(run(kicker, 1150, ACCENT, bold=True, mono=True), size=1150, spc=0)]))); sid+=1
+    # title (serif)
+    tsize = 5000 if is_title else 3000
+    shapes.append(shape(sid, "title", 630000, 1120000 if not is_title else 1600000,
+        10800000, 1500000 if is_title else 1200000,
+        txbody([para(run(title, tsize, INK, bold=True, serif=True), size=0)]))); sid+=1
+    # body
     paras = []
     for b in bullets:
         if b == "":
             paras.append(para('', size=800, spc=200))
         else:
             is_bullet = not is_title
-            paras.append(para(run(b, 1700 if is_title else 1600, INK if is_title else DIM),
-                              bullet=is_bullet, spc=700))
-    by = 2500000 if is_title else 2650000
-    shapes.append(shape(sid, "body", 700000, by, 10400000, 3600000, txbody(paras))); sid+=1
+            paras.append(para(run(b, 1600 if is_title else 1500, DIM, serif=True),
+                              bullet=is_bullet, spc=760))
+    by = 2900000 if is_title else 2650000
+    shapes.append(shape(sid, "body", 700000, by, 10600000, 3400000, txbody(paras))); sid+=1
     # footer
-    shapes.append(shape(sid, "footer", 640000, 6400000, 9000000, 380000,
-        txbody([para(run(f"MedJar  ·  {idx+1:02d} / {len(SLIDES)}  ·  assistive decision-support — not autonomous",
-                         1000, "65799A", mono=True), size=0)]))); sid+=1
+    shapes.append(shape(sid, "footer", 640000, 6420000, 10000000, 360000,
+        txbody([para(run(f"MedJar   ·   {idx+1:02d} / {len(SLIDES)}   ·   assistive decision-support, not an autonomous device",
+                         950, FAINT, mono=True), size=0)]))); sid+=1
 
     return ('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             '<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" '

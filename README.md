@@ -28,13 +28,18 @@ reasoning in medical literature via **RAG**, and converge on a single, provenanc
 python3 build_pptx.py     # writes MedJar.pptx (no pip install needed)
 ```
 
-## Deck outline (18 slides)
+## Deck outline (23 slides, figure-driven)
 
-1. Title  2. The Problem  3. Core Insight  4. Architecture (6 layers)
-5. Agent Ensemble  6. Reasoning Contract  7. RAG Pipeline  8. Debate Protocol
-9. Consensus Mathematics  10. Orchestrator  11. State Machine  12. Multimodal Intake
-13. Diagnostic Report  14. Worked Case  15. Evaluation  16. Safety / Ethics / Regulatory
-17. Limitations  18. Roadmap & Takeaway
+**Title** · **I — System:** motivation, why single-model is insufficient, contributions,
+architecture figure, the Case Context Object · **II — Method:** specialist agents,
+RAG pipeline figure, debate-protocol figure, consensus formalism (Eqs. 1–3),
+disagreement & stopping rule, orchestration state machine · **III — Evaluation:**
+experimental protocol, ablation bar chart, calibration reliability diagram, disagreement-
+convergence plot, worked case · **Discussion:** safety & limitations · **Conclusion** · **References**
+
+The deck uses an austere academic style — serif display type, a single scholarly-crimson
+accent, engineered SVG diagrams, and real (clearly labelled *illustrative*) charts — with no
+decorative gradients, glow, emoji, or badges. Section dividers separate the three parts.
 
 ---
 *MedJar is decision-support. It does not autonomously diagnose or treat and is not a

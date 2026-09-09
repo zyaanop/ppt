@@ -1,596 +1,811 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>MedJar — Multi-Agent Consensus for Medical Diagnosis</title>
 <style>
-  /* ============================================================
-     MedJar — self-contained animated presentation
-     No external dependencies. Vanilla JS + CSS.
-     ============================================================ */
-  :root{
-    --bg-0:#070b14;
-    --bg-1:#0c1425;
-    --bg-2:#101c33;
-    --ink:#e9f1ff;
-    --ink-dim:#9fb2cf;
-    --ink-faint:#65799a;
-    --teal:#2fe0c8;
-    --teal-2:#12b3a6;
-    --blue:#4c8dff;
-    --violet:#9b7bff;
-    --amber:#ffb547;
-    --red:#ff5d6c;
-    --green:#42d98a;
-    --card:rgba(255,255,255,.045);
-    --card-brd:rgba(255,255,255,.10);
-    --glow:0 0 40px rgba(47,224,200,.25);
-    --mono:'SF Mono',ui-monospace,'Cascadia Code',Menlo,Consolas,monospace;
-    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
-  }
-  *{margin:0;padding:0;box-sizing:border-box}
-  html,body{height:100%;overflow:hidden;background:var(--bg-0);font-family:var(--sans);color:var(--ink)}
+/* ============================================================
+   MedJar — research seminar deck. Self-contained, no external deps.
+   Austere academic styling: serif display, restrained palette,
+   figure-driven. One accent (scholarly crimson).
+   ============================================================ */
+:root{
+  --paper:#f6f4ee;        /* warm paper */
+  --paper-2:#efece3;
+  --ink:#1b1b22;
+  --ink-2:#3f3f4a;
+  --ink-3:#6b6b76;
+  --faint:#a9a69c;
+  --rule:#d8d4c8;
+  --accent:#8a1524;       /* scholarly crimson */
+  --accent-2:#2f4b6e;     /* slate blue for figures */
+  --accent-3:#b08322;     /* muted ochre */
+  --ok:#2f6b3f;
+  --serif:'Iowan Old Style','Palatino Linotype',Palatino,'Book Antiqua',Georgia,'Times New Roman',serif;
+  --sans:'Helvetica Neue',Helvetica,Arial,-apple-system,system-ui,sans-serif;
+  --mono:'SF Mono',ui-monospace,'Cascadia Mono',Menlo,Consolas,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#c9c6bd;color:var(--ink);font-family:var(--sans)}
 
-  /* ambient animated background */
-  .ambient{position:fixed;inset:0;z-index:0;overflow:hidden}
-  .orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5;animation:drift 22s ease-in-out infinite}
-  .orb.a{width:520px;height:520px;background:radial-gradient(circle,#12b3a6,transparent 70%);top:-120px;left:-100px}
-  .orb.b{width:600px;height:600px;background:radial-gradient(circle,#4c8dff,transparent 70%);bottom:-160px;right:-140px;animation-delay:-7s}
-  .orb.c{width:420px;height:420px;background:radial-gradient(circle,#9b7bff,transparent 70%);top:40%;left:55%;animation-delay:-13s}
-  @keyframes drift{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(60px,-40px) scale(1.08)}66%{transform:translate(-40px,50px) scale(.95)}}
-  .grid-overlay{position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(ellipse at center,#000 30%,transparent 78%)}
+#deck{position:relative;height:100%;width:100%}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;
+  background:var(--paper);
+  padding:6.4vh 7.4vw 7vh;opacity:0;transform:translateY(10px);
+  transition:opacity .4s ease,transform .4s ease}
+.slide.active{display:flex;opacity:1;transform:none}
 
-  /* deck + slides */
-  #deck{position:relative;z-index:2;height:100%;width:100%}
-  .slide{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;
-    padding:5.2vh 7vw;opacity:0;transform:translateY(24px) scale(.985);
-    transition:opacity .55s cubic-bezier(.2,.7,.2,1),transform .55s cubic-bezier(.2,.7,.2,1)}
-  .slide.active{display:flex;opacity:1;transform:none}
-  .slide.leaving{display:flex;opacity:0;transform:translateY(-18px) scale(.985)}
+/* running header */
+.rh{position:absolute;top:3vh;left:7.4vw;right:7.4vw;display:flex;justify-content:space-between;
+  align-items:baseline;font-family:var(--sans);font-size:12px;letter-spacing:.04em;
+  color:var(--ink-3);border-bottom:1px solid var(--rule);padding-bottom:8px}
+.rh .sec{text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--accent);font-weight:700}
+.rh .pg{font-variant-numeric:tabular-nums;color:var(--faint)}
 
-  h1{font-size:clamp(34px,5.4vw,74px);line-height:1.03;font-weight:800;letter-spacing:-.02em}
-  h2{font-size:clamp(24px,3.3vw,44px);font-weight:750;letter-spacing:-.015em;margin-bottom:.5em}
-  h3{font-size:clamp(16px,1.5vw,22px);font-weight:650;color:var(--teal)}
-  p,li{font-size:clamp(14px,1.32vw,20px);line-height:1.6;color:var(--ink-dim)}
-  .lead{font-size:clamp(16px,1.6vw,23px);color:var(--ink);max-width:60ch}
-  .kicker{font-family:var(--mono);font-size:13px;letter-spacing:.32em;text-transform:uppercase;color:var(--teal);margin-bottom:18px}
-  .grad{background:linear-gradient(100deg,var(--teal),var(--blue) 55%,var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
-  strong{color:var(--ink);font-weight:650}
-  .mono{font-family:var(--mono)}
+/* typography */
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(30px,4.4vw,60px);line-height:1.06;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:clamp(24px,3.1vw,42px);line-height:1.1;letter-spacing:-.005em;margin-bottom:.15em}
+h2:after{content:"";display:block;width:64px;height:3px;background:var(--accent);margin-top:.42em}
+h3{font-family:var(--sans);font-weight:700;font-size:clamp(14px,1.35vw,18px);letter-spacing:.01em;color:var(--ink)}
+p,li{font-family:var(--serif);font-size:clamp(15px,1.5vw,22px);line-height:1.5;color:var(--ink-2)}
+.sub{font-family:var(--serif);font-style:italic;color:var(--ink-3);font-size:clamp(15px,1.6vw,23px)}
+.small{font-size:clamp(12px,1.15vw,16px)}
+strong{font-weight:700;color:var(--ink)}
+em{font-style:italic}
+.mono{font-family:var(--mono);font-size:.9em}
+.accent{color:var(--accent)}
 
-  /* fragment (step reveal) */
-  .frag{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s ease}
-  .frag.show{opacity:1;transform:none}
+.body-wrap{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0}
+.lead{max-width:60ch}
 
-  /* layout helpers */
-  .cols{display:grid;gap:26px}
-  .c2{grid-template-columns:1fr 1fr}
-  .c3{grid-template-columns:repeat(3,1fr)}
-  .c4{grid-template-columns:repeat(4,1fr)}
-  .center{align-items:center;text-align:center}
-  .stack>*+*{margin-top:.8em}
+/* lists — restrained, hanging marker */
+ul.ref,ul.pts{list-style:none}
+ul.pts>li{position:relative;padding-left:1.4em;margin:.55em 0;max-width:64ch}
+ul.pts>li:before{content:"—";position:absolute;left:0;color:var(--accent);font-family:var(--sans)}
+ol.contrib{list-style:none;counter-reset:c}
+ol.contrib>li{counter-increment:c;position:relative;padding-left:2.3em;margin:.7em 0;max-width:62ch}
+ol.contrib>li:before{content:counter(c);position:absolute;left:0;top:.05em;width:1.5em;height:1.5em;
+  border:1.5px solid var(--accent);color:var(--accent);border-radius:50%;
+  display:grid;place-items:center;font-family:var(--sans);font-weight:700;font-size:.62em}
 
-  .card{background:var(--card);border:1px solid var(--card-brd);border-radius:18px;padding:22px 22px;backdrop-filter:blur(8px);position:relative;overflow:hidden}
-  .card:before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--teal),var(--blue));opacity:.8}
-  .card h3{margin-bottom:8px}
-  .card.plain:before{display:none}
+.cols{display:grid;gap:3vw}
+.c2{grid-template-columns:1fr 1fr}
+.c2-wide{grid-template-columns:1.15fr .85fr}
+.c3{grid-template-columns:repeat(3,1fr)}
 
-  .pill{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;
-    padding:7px 14px;border-radius:999px;border:1px solid var(--card-brd);background:var(--card);color:var(--ink-dim)}
-  .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.figcap{font-family:var(--sans);font-size:12.5px;color:var(--ink-3);margin-top:10px;text-align:center;letter-spacing:.01em}
+.figcap b{color:var(--ink);font-weight:700}
+.illus{font-family:var(--sans);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
 
-  ul.clean{list-style:none}
-  ul.clean li{position:relative;padding-left:26px;margin:.5em 0}
-  ul.clean li:before{content:"";position:absolute;left:2px;top:.55em;width:9px;height:9px;border-radius:50%;
-    background:linear-gradient(135deg,var(--teal),var(--blue));box-shadow:0 0 10px rgba(47,224,200,.7)}
+/* clean bordered blocks (no glass, no glow) */
+.block{border:1px solid var(--rule);background:var(--paper-2);padding:18px 20px}
+.block h3{margin-bottom:.35em}
+.block.accent-l{border-left:3px solid var(--accent)}
 
-  table{width:100%;border-collapse:collapse;font-size:clamp(12px,1.15vw,17px)}
-  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.08)}
-  th{color:var(--teal);font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase}
-  td{color:var(--ink-dim)}
-  tr:hover td{background:rgba(255,255,255,.03)}
+table.tbl{width:100%;border-collapse:collapse;font-family:var(--sans)}
+table.tbl th{text-align:left;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);
+  border-bottom:1.5px solid var(--ink);padding:8px 12px;font-weight:700}
+table.tbl td{font-family:var(--serif);font-size:clamp(13px,1.25vw,18px);color:var(--ink-2);
+  border-bottom:1px solid var(--rule);padding:9px 12px}
+table.tbl tr:last-child td{border-bottom:none}
 
-  .big-num{font-size:clamp(40px,6vw,84px);font-weight:800;line-height:1}
-  .metric{font-family:var(--mono)}
+/* math */
+.eq{font-family:var(--serif);font-size:clamp(18px,2vw,26px);color:var(--ink);display:flex;align-items:center;gap:.35em;flex-wrap:wrap}
+.frac{display:inline-flex;flex-direction:column;text-align:center;vertical-align:middle;margin:0 .15em}
+.frac .num{border-bottom:1.4px solid var(--ink);padding:0 .5em .05em}
+.frac .den{padding:.05em .5em 0}
+.eqn-label{font-family:var(--sans);font-size:12px;color:var(--ink-3);margin-left:auto}
+sub,sup{font-size:.66em}
 
-  code,.codebox{font-family:var(--mono)}
-  .codebox{background:#060a12;border:1px solid var(--card-brd);border-radius:14px;padding:18px 20px;font-size:clamp(11px,1.05vw,15px);color:#bfe9e2;white-space:pre;overflow:auto;line-height:1.5}
-  .codebox .k{color:var(--violet)}.codebox .s{color:var(--amber)}.codebox .c{color:var(--ink-faint)}.codebox .n{color:var(--teal)}
+/* section divider */
+.divider{background:var(--ink);color:var(--paper)}
+.divider .rh{color:#9a9aa4;border-color:#33333c}
+.divider .rh .sec{color:#c98b95}
+.divider .body-wrap{justify-content:center}
+.divider .sec-no{font-family:var(--serif);font-size:clamp(60px,12vw,150px);line-height:.9;color:var(--accent);font-weight:600}
+.divider h1{color:var(--paper);margin-top:.1em}
+.divider .sub{color:#b9b9c2}
 
-  /* agent chips */
-  .agent{display:flex;flex-direction:column;gap:6px;align-items:center;padding:18px 14px;border-radius:16px;border:1px solid var(--card-brd);background:var(--card);text-align:center;transition:transform .4s ease,box-shadow .4s ease}
-  .agent:hover{transform:translateY(-6px);box-shadow:var(--glow)}
-  .agent .ic{font-size:32px}
-  .agent b{color:var(--ink);font-size:clamp(14px,1.3vw,19px)}
-  .agent span{font-size:12px;color:var(--ink-faint)}
+/* title slide */
+.title-slide{justify-content:center}
+.title-slide .kicker{font-family:var(--sans);font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:24px}
+.title-slide h1{font-size:clamp(34px,6vw,78px);max-width:16ch}
+.title-slide .tagline{margin-top:22px;max-width:52ch}
+.byline{margin-top:40px;font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.7}
+.byline .affil{color:var(--ink-3);font-size:13px}
+.rule-accent{width:90px;height:4px;background:var(--accent);margin:28px 0}
 
-  /* footer / chrome */
-  .brand{position:fixed;top:26px;left:34px;z-index:5;display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:-.01em}
-  .brand .mark{width:34px;height:34px;border-radius:9px;background:conic-gradient(from 210deg,var(--teal),var(--blue),var(--violet),var(--teal));box-shadow:var(--glow);position:relative}
-  .brand .mark:after{content:"+";position:absolute;inset:0;display:grid;place-items:center;color:#04121a;font-weight:900;font-size:22px}
-  .progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--teal),var(--blue),var(--violet));z-index:6;transition:width .4s ease;box-shadow:0 0 12px rgba(47,224,200,.8)}
-  .chrome{position:fixed;bottom:20px;right:30px;z-index:6;display:flex;align-items:center;gap:14px;font-family:var(--mono);font-size:12px;color:var(--ink-faint)}
-  .btn{cursor:pointer;user-select:none;padding:8px 12px;border-radius:9px;border:1px solid var(--card-brd);background:var(--card);color:var(--ink-dim);transition:.25s}
-  .btn:hover{color:var(--ink);border-color:var(--teal);box-shadow:var(--glow)}
-  .dots{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:6;display:flex;gap:9px}
-  .dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);cursor:pointer;transition:.3s}
-  .dots i.on{background:var(--teal);box-shadow:0 0 10px var(--teal);width:22px;border-radius:5px}
-  .hint{position:fixed;bottom:20px;left:30px;z-index:6;font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+/* monogram badge for agents (replaces emoji) */
+.mono-badge{width:44px;height:44px;border:1.5px solid var(--accent);color:var(--accent);
+  border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-weight:600;font-size:20px;flex:none}
 
-  /* pipeline diagram */
-  .pipe{display:flex;flex-direction:column;gap:12px;width:100%}
-  .pnode{display:flex;align-items:center;gap:16px;padding:14px 18px;border-radius:14px;border:1px solid var(--card-brd);background:var(--card);position:relative}
-  .pnode .idx{width:34px;height:34px;flex:none;border-radius:9px;display:grid;place-items:center;font-family:var(--mono);font-weight:700;color:#04121a;background:linear-gradient(135deg,var(--teal),var(--blue))}
-  .pnode b{color:var(--ink)}.pnode small{color:var(--ink-faint);display:block;font-size:12px}
-  .pflow{position:absolute;left:33px;bottom:-13px;width:2px;height:14px;background:linear-gradient(var(--teal),transparent)}
+/* fragments */
+.frag{opacity:0;transform:translateY(6px);transition:opacity .45s ease,transform .45s ease}
+.frag.show{opacity:1;transform:none}
 
-  .quote{font-size:clamp(20px,2.6vw,38px);font-weight:600;line-height:1.35;max-width:22ch;color:var(--ink)}
-  .quote .grad{font-weight:800}
+/* SVG figure defaults */
+svg .box{fill:var(--paper-2);stroke:var(--ink);stroke-width:1.4}
+svg .box-a{fill:#f0e3e5;stroke:var(--accent);stroke-width:1.6}
+svg .lbl{font-family:var(--sans);fill:var(--ink);font-size:14px}
+svg .lbl-s{font-family:var(--sans);fill:var(--ink-3);font-size:11.5px}
+svg .lbl-w{font-family:var(--sans);fill:var(--paper);font-size:13px;font-weight:700}
+svg .arw{stroke:var(--ink-3);stroke-width:1.4;fill:none;marker-end:url(#ah)}
+svg .axis{stroke:var(--ink);stroke-width:1.3}
+svg .grid{stroke:var(--rule);stroke-width:1}
+svg .tick{font-family:var(--sans);fill:var(--ink-3);font-size:11px}
+svg .refline{stroke:var(--ink-3);stroke-width:1.2;stroke-dasharray:4 4}
 
-  /* debate ring */
-  .ring{position:relative;width:min(46vh,480px);height:min(46vh,480px);margin:0 auto}
-  .ring .core{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:34%;height:34%;border-radius:50%;
-    background:radial-gradient(circle,#0e2033,#0a1524);border:1px solid var(--teal-2);display:grid;place-items:center;text-align:center;box-shadow:var(--glow)}
-  .ring .core b{font-size:14px;color:var(--teal)}
-  .ring .sat{position:absolute;width:26%;height:26%;border-radius:16px;border:1px solid var(--card-brd);background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px}
-  .ring svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-  .flowline{stroke:var(--teal);stroke-width:1.6;fill:none;opacity:.5;stroke-dasharray:6 8;animation:dash 1.2s linear infinite}
-  @keyframes dash{to{stroke-dashoffset:-28}}
-
-  .tag{font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:6px;border:1px solid var(--card-brd);color:var(--ink-dim)}
-  .warn{border-color:rgba(255,93,108,.5);color:var(--red)}
-  .ok{border-color:rgba(66,217,138,.5);color:var(--green)}
-
-  .disclaimer{position:fixed;bottom:52px;left:50%;transform:translateX(-50%);z-index:5;font-size:11px;color:var(--ink-faint);font-family:var(--mono);letter-spacing:.05em}
-  @media(max-width:720px){.c2,.c3,.c4{grid-template-columns:1fr}.brand span{display:none}}
+/* chrome */
+.progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);z-index:20;transition:width .3s ease}
+.chrome{position:fixed;bottom:14px;right:22px;z-index:20;font-family:var(--mono);font-size:11px;color:var(--ink-3);display:flex;gap:14px;align-items:center}
+.btn{cursor:pointer;user-select:none;border:1px solid var(--rule);background:var(--paper);color:var(--ink-2);padding:5px 10px;border-radius:3px;font-family:var(--sans);font-size:11px}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.hint{position:fixed;bottom:14px;left:22px;z-index:20;font-family:var(--sans);font-size:11px;color:var(--faint)}
+.dots{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:20;display:flex;gap:6px}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--rule);cursor:pointer;transition:.25s}
+.dots i.on{background:var(--accent);width:16px;border-radius:3px}
+@media(max-width:820px){.c2,.c2-wide,.c3{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<div class="ambient"><div class="orb a"></div><div class="orb b"></div><div class="orb c"></div></div>
-<div class="grid-overlay"></div>
-
-<div class="brand"><div class="mark"></div><span>MedJar</span></div>
 <div class="progress" id="progress"></div>
-
 <div id="deck">
-<!-- 01 TITLE -->
-<section class="slide center" data-auto="7">
-  <div class="frag show" style="margin-bottom:22px"><span class="pill"><span class="dot" style="background:var(--teal)"></span>Multi-Agent Clinical AI · Seminar Presentation</span></div>
-  <h1 class="frag">Med<span class="grad">Jar</span></h1>
-  <p class="lead frag" style="margin:22px auto 0;text-align:center">A multi-agent consensus system where specialist LLM agents <strong>debate</strong> a patient's case, ground their reasoning in <strong>medical literature</strong>, and converge on a single <strong>diagnostic report</strong>.</p>
-  <div class="frag" style="margin-top:34px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
-    <span class="pill">🩻 Radiologist</span><span class="pill">🫀 Cardiologist</span><span class="pill">🎗️ Oncologist</span><span class="pill">🧠 + Extensible</span>
-  </div>
-  <p class="frag mono" style="margin-top:30px;font-size:12px;color:var(--ink-faint)">Medical Judgment via Agent Reasoning — assistive · human-in-the-loop · not autonomous</p>
-</section>
-
-<!-- 02 THE PROBLEM -->
-<section class="slide" data-auto="9">
-  <div class="kicker frag show">The Problem</div>
-  <h2 class="frag">Complex diagnosis fails for <span class="grad">structural</span> reasons</h2>
-  <div class="cols c2" style="margin-top:10px">
-    <div class="stack">
-      <div class="card frag"><h3>≈ 1 in 20</h3><p>adults experience a diagnostic error in outpatient care — concentrated in complex, multi-system cases.</p></div>
-      <div class="card frag"><h3>Specialty silos</h3><p>A cardiologist and an oncologist rarely reason on the same case at the same time.</p></div>
-    </div>
-    <div class="stack">
-      <div class="card frag"><h3>Cognitive bias</h3><p><strong>Anchoring</strong> and <strong>premature closure</strong> shut down the differential too early.</p></div>
-      <div class="card frag"><h3>Stale knowledge + hallucination</h3><p>Guidelines evolve faster than anyone can track — and a lone LLM asserts false facts fluently.</p></div>
-    </div>
-  </div>
-  <p class="lead frag" style="margin-top:26px">A single "expert" model collapses the field's diversity into <strong>one</strong> distribution. MedJar restores the productive <span class="grad">tension between specialists</span>.</p>
-</section>
-
-<!-- 03 INSIGHT -->
-<section class="slide center" data-auto="7">
-  <div class="kicker frag show">Core Insight</div>
-  <blockquote class="quote frag">No single mind holds the whole of medicine. The best diagnoses emerge from a room of <span class="grad">disagreeing experts</span> forced to reconcile their evidence.</blockquote>
-  <div class="cols c3 frag" style="margin-top:40px;max-width:900px">
-    <div class="card plain"><h3>Debate &gt; Vote</h3><p>Use the <em>reasons</em>, not just the answers.</p></div>
-    <div class="card plain"><h3>Disagreement = Signal</h3><p>Conflict drives retrieval &amp; escalation.</p></div>
-    <div class="card plain"><h3>Ground everything</h3><p>No claim without a citation.</p></div>
-  </div>
-</section>
-
-<!-- 04 ARCHITECTURE -->
-<section class="slide" data-auto="11">
-  <div class="kicker frag show">System Architecture</div>
-  <h2 class="frag">Six layers, one control loop</h2>
-  <div class="pipe" style="max-width:920px">
-    <div class="pnode frag"><div class="idx">0</div><div><b>Intake</b><small>Case files → de-identification → normalization (FHIR, labs, imaging, notes, genomics)</small></div><div class="pflow"></div></div>
-    <div class="pnode frag"><div class="idx">1</div><div><b>Representation</b><small>Multimodal encoders → unified <span class="mono">Case Context Object (CCO)</span></small></div><div class="pflow"></div></div>
-    <div class="pnode frag"><div class="idx">2</div><div><b>Knowledge / RAG</b><small>Hybrid dense + sparse retrieval over guidelines, texts, drug DBs — per-specialty scopes</small></div><div class="pflow"></div></div>
-    <div class="pnode frag" style="border-color:var(--teal-2);box-shadow:var(--glow)"><div class="idx" style="background:linear-gradient(135deg,var(--violet),var(--blue))">3</div><div><b>Reasoning — the debate loop lives here</b><small>Radiologist · Cardiologist · Oncologist ↔ Chief-of-Service Orchestrator</small></div><div class="pflow"></div></div>
-    <div class="pnode frag"><div class="idx">4</div><div><b>Consensus &amp; Calibration</b><small>Weighted aggregation · uncertainty · red-flag detection · human-escalation gate</small></div><div class="pflow"></div></div>
-    <div class="pnode frag"><div class="idx">5</div><div><b>Reporting</b><small>Unified diagnostic report + provenance + replayable audit log</small></div></div>
-  </div>
-</section>
-
-<!-- 05 AGENTS -->
-<section class="slide" data-auto="10">
-  <div class="kicker frag show">The Agent Ensemble</div>
-  <h2 class="frag">Each specialist = ⟨ persona · tools · retrieval scope ⟩</h2>
-  <div class="cols c4 frag" style="margin:6px 0 24px">
-    <div class="agent"><span class="ic">🩻</span><b>Radiologist</b><span>Morphology → localization → imaging differential</span></div>
-    <div class="agent"><span class="ic">🫀</span><b>Cardiologist</b><span>Rhythm · ischemia · hemodynamics · structure</span></div>
-    <div class="agent"><span class="ic">🎗️</span><b>Oncologist</b><span>Tissue of origin · staging · biomarkers</span></div>
-    <div class="agent"><span class="ic">🧑‍⚕️</span><b>Generalist</b><span>Guards the "whole patient"</span></div>
-  </div>
-  <div class="cols c2">
-    <div class="card frag"><h3>Distinct reasoning priors</h3><p>Personas encode <em>what this specialist worries about first</em> — preserving the diversity that makes debate valuable.</p></div>
-    <div class="card frag"><h3>Scoped retrieval</h3><p>Each agent preferentially retrieves from its own corpus (atlases, ESC/ACC, staging manuals) — global retrieval would homogenize views.</p></div>
-  </div>
-  <p class="frag mono" style="margin-top:18px;font-size:12px;color:var(--ink-faint)">Plug-in registry → add Neurology, Infectious Disease, Pathology with only a persona + scope.</p>
-</section>
-
-<!-- 06 REASONING CONTRACT -->
-<section class="slide" data-auto="9">
-  <div class="kicker frag show">Reasoning Contract</div>
-  <h2 class="frag">Every turn is <span class="grad">structured</span>, never free prose</h2>
-  <div class="cols c2" style="align-items:center">
-    <div class="codebox frag"><span class="c">// each agent returns this — comparable & auditable</span>
-{
-  <span class="s">"differential"</span>: [
-    { <span class="s">"dx"</span>: <span class="s">"…"</span>, <span class="s">"icd10"</span>: <span class="s">"…"</span>,
-      <span class="s">"likelihood"</span>: <span class="n">0.72</span>,
-      <span class="s">"supporting_evidence"</span>: [{<span class="s">"claim"</span>,<span class="s">"citation_id"</span>}],
-      <span class="s">"refuting_evidence"</span>:  [{<span class="s">"claim"</span>,<span class="s">"citation_id"</span>}],
-      <span class="s">"discriminating_test"</span>: <span class="s">"…"</span> }
-  ],
-  <span class="s">"red_flags"</span>: [<span class="s">"…"</span>],
-  <span class="s">"confidence"</span>: <span class="n">0.0-1.0</span>,
-  <span class="s">"requests"</span>: [<span class="s">"retrieve:…"</span>, <span class="s">"ask-human:…"</span>]
-}</div>
-    <div class="stack">
-      <ul class="clean frag"><li>Positions become <strong>comparable</strong> and <strong>aggregable</strong>.</li></ul>
-      <ul class="clean frag"><li>Every claim carries a <strong>citation_id</strong> into the Evidence Ledger.</li></ul>
-      <ul class="clean frag"><li>A groundedness verifier <strong>rejects ungrounded claims</strong> before they enter the debate.</li></ul>
-      <ul class="clean frag"><li><strong>red_flags</strong> can override consensus and force escalation.</li></ul>
+<!-- 1 TITLE -->
+<section class="slide title-slide" data-sec="">
+  <div class="body-wrap">
+    <div class="kicker frag show">Multi-Agent Clinical Reasoning · Research Seminar</div>
+    <h1 class="frag">MedJar: Consensus Diagnosis by Debating Specialist Agents</h1>
+    <div class="rule-accent frag"></div>
+    <p class="sub tagline frag">A framework in which persona-conditioned language-model specialists independently reason over a patient case, ground their claims in retrieved literature, and are driven toward a calibrated, auditable diagnosis through structured debate.</p>
+    <div class="byline frag">
+      <div><strong>MedJar Working Group</strong></div>
+      <div class="affil">Clinical Machine Learning · Decision-Support Systems</div>
+      <div class="affil" style="margin-top:10px">Seminar presentation · assistive, human-in-the-loop · not an autonomous diagnostic device</div>
     </div>
   </div>
 </section>
 
-<!-- 07 RAG -->
-<section class="slide" data-auto="10">
-  <div class="kicker frag show">Knowledge Grounding · RAG</div>
-  <h2 class="frag">Hybrid retrieval → re-rank → cite</h2>
-  <div class="pipe" style="max-width:880px">
-    <div class="pnode frag"><div class="idx">A</div><div><b>Dense</b><small>Embed sub-question + CCO fields → vector search (cosine)</small></div></div>
-    <div class="pnode frag"><div class="idx">B</div><div><b>Sparse (BM25)</b><small>Exact clinical terms, drug names, gene symbols</small></div></div>
-    <div class="pnode frag"><div class="idx">⊕</div><div><b>Reciprocal Rank Fusion</b><small class="mono">RRF(d) = Σ 1 / (k + rankᵣ(d)),  k ≈ 60</small></div></div>
-    <div class="pnode frag"><div class="idx">R</div><div><b>Cross-encoder re-rank</b><small>Precision pass on top-N against exact query</small></div></div>
-    <div class="pnode frag"><div class="idx">✓</div><div><b>Groundedness check + Evidence Ledger</b><small>NLI verifier tests each claim vs. its citation; provenance stored</small></div></div>
-  </div>
-  <p class="lead frag" style="margin-top:22px">Corpus is <strong>versioned</strong> with effective dates &amp; evidence grades — ICD-10 · SNOMED CT · LOINC · RxNorm for structured output.</p>
-</section>
-
-<!-- 08 DEBATE PHASES -->
-<section class="slide" data-auto="11">
-  <div class="kicker frag show">The Debate Protocol · MedJar's core</div>
-  <h2 class="frag">Propose → Critique → Rebut → Converge</h2>
-  <div class="cols c4">
-    <div class="card frag"><h3>1 · Propose</h3><p><strong>No cross-talk.</strong> Independent differentials prevent anchoring &amp; preserve diversity.</p></div>
-    <div class="card frag"><h3>2 · Critique</h3><p><strong>Anonymized</strong> &amp; adversarial. Attack weak support, misread evidence, missing tests.</p></div>
-    <div class="card frag"><h3>3 · Rebut</h3><p>Defend, concede, or revise. <strong>Disagreement triggers targeted retrieval.</strong></p></div>
-    <div class="card frag"><h3>4 · Converge</h3><p>Measure agreement → aggregate, loop again, or <strong>escalate to a human</strong>.</p></div>
-  </div>
-  <div class="cols c2 frag" style="margin-top:24px">
-    <div class="card plain"><h3>Why not majority vote?</h3><p>Voting discards <em>why</em> agents disagree and silences the minority "can't-miss" diagnosis. Debate keeps the reasons.</p></div>
-    <div class="card plain"><h3>Red-flag override</h3><p>Any agent raising a can't-miss dx (dissection, PE, sepsis, malignancy) above threshold forces <strong>immediate escalation</strong>.</p></div>
-  </div>
-</section>
-
-<!-- 09 CONSENSUS MATH -->
-<section class="slide" data-auto="11">
-  <div class="kicker frag show">Consensus Mathematics</div>
-  <h2 class="frag">Confidence-weighted, evidence-adjusted aggregation</h2>
-  <div class="cols c2" style="align-items:start">
-    <div class="stack">
-      <div class="card frag"><h3>Ensemble score S(h)</h3><p class="mono" style="color:var(--ink)">S(h) = Σᵢ wᵢ(h)·cᵢ·pᵢ(h) ⁄ Σᵢ wᵢ(h)·cᵢ</p><p><strong>wᵢ(h)</strong> soft specialty weight · <strong>cᵢ</strong> calibrated confidence · <strong>pᵢ(h)</strong> agent likelihood.</p></div>
-      <div class="card frag"><h3>Evidence adjustment</h3><p class="mono" style="color:var(--ink)">S*(h) = σ( α·logit S(h) + β·E(h) )</p><p>Rewards higher-grade, more recent grounded evidence.</p></div>
-    </div>
-    <div class="stack">
-      <div class="card frag"><h3>Disagreement D̄</h3><p class="mono" style="color:var(--ink)">Disagree(h) = Σᵢ wᵢcᵢ(pᵢ(h)−S(h))² ⁄ Σᵢ wᵢcᵢ</p><p>Weighted variance across agents → the control signal.</p></div>
-      <div class="card frag"><h3>Stopping rule</h3><ul class="clean" style="margin-top:4px">
-        <li><span class="tag ok">converge</span> D̄ ≤ τ_agree</li>
-        <li><span class="tag">bound</span> round r = R_max</li>
-        <li><span class="tag warn">escalate</span> red-flag &gt; τ_flag</li></ul></div>
+<!-- 2 PROBLEM -->
+<section class="slide" data-sec="Motivation">
+  <div class="rh"><span class="sec">Motivation</span><span class="pg"></span></div>
+  <div class="body-wrap">
+    <h2 class="frag show">Diagnostic error is a systems problem</h2>
+    <div class="cols c2-wide" style="margin-top:.6em;align-items:center">
+      <div>
+        <p class="lead frag">An estimated <strong>~5%</strong> of adults experience a diagnostic error in outpatient care each year; harm concentrates in <strong>complex, multi-system presentations</strong> that cross specialty boundaries.<sup>[1]</sup></p>
+        <ul class="pts" style="margin-top:1em">
+          <li class="frag"><strong>Anchoring &amp; premature closure</strong> — the differential collapses before the evidence is exhausted.</li>
+          <li class="frag"><strong>Specialty siloing</strong> — the relevant experts rarely reason on the case simultaneously.</li>
+          <li class="frag"><strong>Knowledge drift</strong> — guidelines change faster than any individual tracks them.</li>
+        </ul>
+      </div>
+      <figure class="frag">
+        <svg viewBox="0 0 340 240" width="100%" style="max-height:38vh">
+          <!-- simple stacked-contribution bar: error sources -->
+          <line class="axis" x1="46" y1="16" x2="46" y2="196"/>
+          <line class="axis" x1="46" y1="196" x2="322" y2="196"/>
+          <g class="tick">
+            <text x="40" y="200" text-anchor="end">0</text>
+            <text x="40" y="140" text-anchor="end">25</text>
+            <text x="40" y="84" text-anchor="end">50</text>
+            <text x="40" y="28" text-anchor="end">75%</text>
+          </g>
+          <!-- bars: cognitive, system, knowledge, data -->
+          <g>
+            <rect x="70" y="52" width="42" height="144" fill="#8a1524"/>
+            <rect x="132" y="108" width="42" height="88" fill="#2f4b6e"/>
+            <rect x="194" y="140" width="42" height="56" fill="#b08322"/>
+            <rect x="256" y="164" width="42" height="32" fill="#6b6b76"/>
+          </g>
+          <g class="lbl-s" text-anchor="middle">
+            <text x="91" y="212">Cognitive</text>
+            <text x="153" y="212">System</text>
+            <text x="215" y="212">Knowl.</text>
+            <text x="277" y="212">Data</text>
+          </g>
+        </svg>
+        <figcaption class="figcap"><b>Fig. 1.</b> Contributing factors to diagnostic error (schematic). <span class="illus">Illustrative</span></figcaption>
+      </figure>
     </div>
   </div>
 </section>
 
-<!-- 10 ORCHESTRATOR / DEBATE RING -->
-<section class="slide" data-auto="10">
-  <div class="kicker frag show">Orchestration · Chief-of-Service</div>
-  <h2 class="frag">A <span class="grad">deterministic</span> controller convenes the room</h2>
-  <div class="cols c2" style="align-items:center">
-    <div class="ring frag">
-      <svg viewBox="0 0 100 100">
-        <path class="flowline" d="M50,50 L50,12"/><path class="flowline" d="M50,50 L86,72" style="animation-delay:-.4s"/><path class="flowline" d="M50,50 L14,72" style="animation-delay:-.8s"/>
+<!-- 3 WHY NOT SINGLE MODEL -->
+<section class="slide" data-sec="Motivation">
+  <div class="rh"><span class="sec">Motivation</span><span class="pg"></span></div>
+  <div class="body-wrap">
+    <h2 class="frag show">Why a single "expert" model is not enough</h2>
+    <p class="lead frag" style="margin-top:.5em">Conditioning one model on <em>"you are an expert physician"</em> collapses the diversity of clinical reasoning into a single distribution. It cannot represent the productive tension between specialties, and its chain-of-thought is prone to self-consistent-but-wrong trajectories with poorly calibrated confidence.</p>
+    <div class="cols c3 frag" style="margin-top:1.4em">
+      <div class="block accent-l"><h3>Correlated failure</h3><p class="small">One prior → one blind spot. No internal adversary to surface the missed diagnosis.</p></div>
+      <div class="block accent-l"><h3>Overconfidence</h3><p class="small">Fluent assertion is uncorrelated with correctness; confidence is miscalibrated.</p></div>
+      <div class="block accent-l"><h3>Opaque grounding</h3><p class="small">Claims are not tied to a citable source, so they cannot be checked or audited.</p></div>
+    </div>
+    <p class="sub frag" style="margin-top:1.3em">Our thesis: recover the value of a multidisciplinary team by making specialist models <strong>disagree productively</strong> and <strong>reconcile against evidence</strong>.</p>
+  </div>
+</section>
+
+<!-- 4 CONTRIBUTIONS -->
+<section class="slide" data-sec="Motivation">
+  <div class="rh"><span class="sec">Contributions</span><span class="pg"></span></div>
+  <div class="body-wrap">
+    <h2 class="frag show">Contributions</h2>
+    <ol class="contrib" style="margin-top:.7em">
+      <li class="frag"><strong>Specialist multi-agent formulation.</strong> Persona-conditioned agents with distinct reasoning priors and <em>private, scoped</em> retrieval, preserving the perspective diversity that debate exploits.</li>
+      <li class="frag"><strong>A structured debate protocol</strong> (propose → critique → rebut → converge) that operates on <em>reasons</em>, not just answers, and treats disagreement as a control signal.</li>
+      <li class="frag"><strong>Confidence-weighted, evidence-adjusted consensus</strong> with a formal disagreement metric and an explicit stopping / human-escalation rule.</li>
+      <li class="frag"><strong>Grounding &amp; calibration.</strong> Every claim is verified against a retrieved passage; reported confidence is post-hoc calibrated.</li>
+      <li class="frag"><strong>An evaluation protocol</strong> for the system as decision-support: accuracy, calibration, can't-miss safety, groundedness, and human utility.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- 5 SECTION: SYSTEM -->
+<section class="slide divider" data-sec="System">
+  <div class="rh"><span class="sec">Part I</span><span class="pg"></span></div>
+  <div class="body-wrap">
+    <div class="sec-no frag show">I</div>
+    <h1 class="frag">System Overview</h1>
+    <p class="sub frag">Data flow, the case representation, and where the debate lives.</p>
+  </div>
+</section>
+
+<!-- 6 ARCHITECTURE FIGURE -->
+<section class="slide" data-sec="System">
+  <div class="rh"><span class="sec">System · Architecture</span><span class="pg"></span></div>
+  <div class="body-wrap">
+    <h2 class="frag show">Architecture</h2>
+    <figure class="frag" style="margin-top:.4em">
+      <svg viewBox="0 0 980 430" width="100%" style="max-height:60vh">
+        <defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#6b6b76"/></marker></defs>
+        <!-- left pipeline -->
+        <g>
+          <rect class="box" x="24" y="24" width="220" height="46" rx="4"/><text class="lbl" x="134" y="52" text-anchor="middle">0 · Intake &amp; de-identification</text>
+          <rect class="box" x="24" y="96" width="220" height="46" rx="4"/><text class="lbl" x="134" y="124" text-anchor="middle">1 · Representation → CCO</text>
+          <rect class="box" x="24" y="168" width="220" height="46" rx="4"/><text class="lbl" x="134" y="196" text-anchor="middle">2 · Knowledge / RAG</text>
+          <rect class="box-a" x="24" y="240" width="220" height="46" rx="4"/><text class="lbl" x="134" y="268" text-anchor="middle" fill="#8a1524">3 · Reasoning (debate)</text>
+          <rect class="box" x="24" y="312" width="220" height="46" rx="4"/><text class="lbl" x="134" y="340" text-anchor="middle">4 · Consensus &amp; calibration</text>
+          <rect class="box" x="24" y="384" width="220" height="42" rx="4"/><text class="lbl" x="134" y="410" text-anchor="middle">5 · Report + audit trail</text>
+          <path class="arw" d="M134,70 L134,94"/><path class="arw" d="M134,142 L134,166"/>
+          <path class="arw" d="M134,214 L134,238"/><path class="arw" d="M134,286 L134,310"/>
+          <path class="arw" d="M134,358 L134,382"/>
+        </g>
+        <!-- expansion of reasoning layer -->
+        <path class="arw" d="M244,263 L300,263"/>
+        <rect x="308" y="70" width="648" height="300" rx="6" fill="none" stroke="#8a1524" stroke-width="1.4" stroke-dasharray="5 4"/>
+        <text class="lbl-s" x="322" y="90" fill="#8a1524">Reasoning layer — the debate loop</text>
+        <!-- agents -->
+        <g>
+          <rect class="box" x="336" y="112" width="150" height="60" rx="4"/><text class="lbl" x="411" y="140" text-anchor="middle">Radiologist</text><text class="lbl-s" x="411" y="158" text-anchor="middle">scoped RAG</text>
+          <rect class="box" x="336" y="196" width="150" height="60" rx="4"/><text class="lbl" x="411" y="224" text-anchor="middle">Cardiologist</text><text class="lbl-s" x="411" y="242" text-anchor="middle">scoped RAG</text>
+          <rect class="box" x="336" y="280" width="150" height="60" rx="4"/><text class="lbl" x="411" y="308" text-anchor="middle">Oncologist</text><text class="lbl-s" x="411" y="326" text-anchor="middle">scoped RAG</text>
+        </g>
+        <!-- orchestrator -->
+        <rect class="box-a" x="612" y="176" width="180" height="98" rx="4"/>
+        <text class="lbl" x="702" y="212" text-anchor="middle" fill="#8a1524" font-weight="700">Chief-of-Service</text>
+        <text class="lbl-s" x="702" y="232" text-anchor="middle">orchestrator</text>
+        <text class="lbl-s" x="702" y="250" text-anchor="middle">(deterministic)</text>
+        <!-- bidirectional links agents <-> orchestrator -->
+        <path class="arw" d="M486,142 L610,200"/><path class="arw" d="M610,214 L488,150" opacity=".5"/>
+        <path class="arw" d="M486,226 L610,226"/>
+        <path class="arw" d="M486,310 L610,250"/>
+        <!-- evidence ledger -->
+        <rect class="box" x="840" y="196" width="104" height="58" rx="4"/><text class="lbl-s" x="892" y="220" text-anchor="middle">Evidence</text><text class="lbl-s" x="892" y="236" text-anchor="middle">Ledger</text>
+        <path class="arw" d="M792,225 L838,225"/>
       </svg>
-      <div class="core"><b>Chief of<br>Service</b></div>
-      <div class="sat" style="top:0;left:50%;transform:translateX(-50%)"><span style="font-size:22px">🩻</span><small style="font-size:11px;color:var(--ink-faint)">Radiology</small></div>
-      <div class="sat" style="bottom:6%;right:2%"><span style="font-size:22px">🫀</span><small style="font-size:11px;color:var(--ink-faint)">Cardiology</small></div>
-      <div class="sat" style="bottom:6%;left:2%"><span style="font-size:22px">🎗️</span><small style="font-size:11px;color:var(--ink-faint)">Oncology</small></div>
+      <figcaption class="figcap"><b>Fig. 2.</b> Six-stage pipeline. Specialist agents retrieve privately and exchange grounded arguments through a deterministic orchestrator that logs all evidence.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 7 INTAKE / CCO -->
+<section class="slide" data-sec="System">
+  <div class="rh"><span class="sec">System · Representation</span><span class="pg"></span></div>
+  <div class="body-wrap">
+    <h2 class="frag show">The Case Context Object</h2>
+    <p class="lead frag" style="margin:.3em 0 1em">Heterogeneous inputs are de-identified at the boundary and normalized into one shared, coded representation. The reasoning layer never sees direct identifiers; raw imaging pixels remain in the enclave.</p>
+    <table class="tbl frag">
+      <thead><tr><th>Modality</th><th>Source</th><th>Processing</th><th>Coded output</th></tr></thead>
+      <tbody>
+        <tr><td>Structured EHR</td><td>FHIR / HL7</td><td>Schema mapping, unit normalization</td><td class="mono">LOINC · ICD-10 · RxNorm</td></tr>
+        <tr><td>Clinical notes</td><td>H&amp;P, discharge</td><td>De-id, section &amp; negation parsing</td><td class="mono">SNOMED CT entities</td></tr>
+        <tr><td>Imaging</td><td>DICOM</td><td>Vision model → structured findings</td><td class="mono">findings + impression</td></tr>
+        <tr><td>Pathology / genomics</td><td>Reports, VCF</td><td>Biomarker &amp; variant annotation</td><td class="mono">actionable flags</td></tr>
+        <tr><td>Waveforms</td><td>ECG, telemetry</td><td>Interval &amp; morphology extraction</td><td class="mono">feature vector</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 8 SECTION: METHOD -->
+<section class="slide divider" data-sec="Method">
+  <div class="rh"><span class="sec">Part II</span><span class="pg"></span></div>
+  <div class="body-wrap">
+    <div class="sec-no frag show">II</div>
+    <h1 class="frag">Method</h1>
+    <p class="sub frag">Agents, grounding, the debate protocol, and the consensus formalism.</p>
+  </div>
+</section>
+<!-- 9 AGENTS -->
+<section class="slide" data-sec="Method">
+  <div class="rh"><span class="sec">Method · Agents</span><span class="pg"></span></div>
+  <div class="body-wrap">
+    <h2 class="frag show">Specialist agents</h2>
+    <p class="lead frag" style="margin:.3em 0 1.1em">Each agent is a triple <span class="mono">⟨persona, tools, retrieval scope⟩</span>. Personas encode distinct reasoning priors; scoped retrieval keeps their perspectives distinct — global retrieval would homogenize the ensemble and destroy the diversity debate depends on.</p>
+    <div class="cols c3">
+      <div class="frag" style="display:flex;gap:14px;align-items:flex-start">
+        <div class="mono-badge">R</div>
+        <div><h3>Radiologist</h3><p class="small">Reasons from image morphology and localization <em>before</em> the referral hypothesis. Scope: imaging atlases, appropriateness criteria.</p></div>
+      </div>
+      <div class="frag" style="display:flex;gap:14px;align-items:flex-start">
+        <div class="mono-badge">C</div>
+        <div><h3>Cardiologist</h3><p class="small">Prioritizes exclusion of life-threatening cardiac etiologies. Scope: ESC/ACC guidelines, risk scores, ECG libraries.</p></div>
+      </div>
+      <div class="frag" style="display:flex;gap:14px;align-items:flex-start">
+        <div class="mono-badge">O</div>
+        <div><h3>Oncologist</h3><p class="small">Assesses tissue of origin, stage-defining evidence, actionable biomarkers. Scope: staging manuals, oncology guidelines.</p></div>
+      </div>
     </div>
-    <div class="stack">
-      <ul class="clean frag"><li>Allocates turns &amp; <strong>anonymizes</strong> identities during critique.</li></ul>
-      <ul class="clean frag"><li>Enforces the contract — rejects malformed / ungrounded turns.</li></ul>
-      <ul class="clean frag"><li>Computes <strong>D̄</strong>, evidence scores, applies the stopping rule.</li></ul>
-      <ul class="clean frag"><li>Manages the <strong>Evidence Ledger</strong> &amp; immutable audit log.</li></ul>
-      <ul class="clean frag"><li>Enforces compute budgets — <span class="mono">R_max</span>, per-turn token caps.</li></ul>
-      <p class="frag mono" style="font-size:12px;color:var(--ink-faint)">Deterministic (not free-form LLM) → predictable, testable, auditable control flow.</p>
-    </div>
-  </div>
-</section>
-
-<!-- 11 STATE MACHINE -->
-<section class="slide" data-auto="9">
-  <div class="kicker frag show">Control Flow</div>
-  <h2 class="frag">The state machine</h2>
-  <div class="frag codebox" style="max-width:900px">        ┌─────────┐
-        │ INTAKE  │
-        └────┬────┘
-             ▼
-   ┌──────────────┐   agents retrieve + propose (isolated)
-   │  PROPOSE     │◄────────────────────────────────┐
-   └──────┬───────┘                                  │
-          ▼                                           │
-   ┌──────────────┐   grounded, anonymized attacks    │
-   │  CRITIQUE    │                                   │
-   └──────┬───────┘                                   │
-          ▼                                           │
-   ┌──────────────┐   revise + targeted retrieval     │
-   │  REBUT       │                                   │
-   └──────┬───────┘                                   │
-          ▼                                           │
-   ┌──────────────┐   compute D̄, detect red-flags     │
-   │  ASSESS      │──── not converged & r &lt; R_max ────┘
-   └──┬────────┬──┘
- conv.│        │ red-flag OR (r=R_max & not conv.)
-      ▼        ▼
- ┌─────────┐  ┌───────────┐
- │CONSENSUS│  │ ESCALATE  │ → human clinician + full transcript
- └────┬────┘  └───────────┘
-      ▼
- ┌─────────┐
- │ REPORT  │
- └─────────┘</div>
-</section>
-
-<!-- 12 MULTIMODAL INTAKE -->
-<section class="slide" data-auto="9">
-  <div class="kicker frag show">Multimodal Case Ingestion</div>
-  <h2 class="frag">Everything normalizes into the <span class="grad">CCO</span></h2>
-  <table class="frag">
-    <thead><tr><th>Modality</th><th>Source</th><th>Processing</th><th>CCO field</th></tr></thead>
-    <tbody>
-      <tr><td>Structured EHR</td><td>FHIR / HL7</td><td>Schema map, unit norm, LOINC/ICD/RxNorm</td><td class="mono">labs, meds, problems</td></tr>
-      <tr><td>Clinical notes</td><td>H&amp;P, discharge</td><td>De-id, section parse, negation extraction</td><td class="mono">narrative</td></tr>
-      <tr><td>Imaging</td><td>DICOM CT/MRI/echo</td><td>Vision model → findings; <b>pixels stay in enclave</b></td><td class="mono">imaging_findings</td></tr>
-      <tr><td>Pathology</td><td>Reports / WSI</td><td>Biomarker extraction</td><td class="mono">pathology</td></tr>
-      <tr><td>Genomics</td><td>VCF / panels</td><td>Variant annotation, actionable flags</td><td class="mono">genomics</td></tr>
-      <tr><td>Waveforms</td><td>ECG / telemetry</td><td>Interval &amp; morphology features</td><td class="mono">ecg_features</td></tr>
-    </tbody>
-  </table>
-  <p class="lead frag" style="margin-top:18px"><strong>De-identification at the boundary</strong> (Safe Harbor / expert determination). The reasoning layer never sees direct identifiers.</p>
-</section>
-
-<!-- 13 REPORT -->
-<section class="slide" data-auto="9">
-  <div class="kicker frag show">The Unified Diagnostic Report</div>
-  <h2 class="frag">Leads with <span class="grad">uncertainty</span>, not a bare answer</h2>
-  <div class="cols c3">
-    <div class="card frag"><h3>Ranked differential</h3><p>Each hypothesis: calibrated S*(h), supporting &amp; refuting evidence (cited), and the single most <strong>discriminating next test</strong>.</p></div>
-    <div class="card frag"><h3>Red-flag panel</h3><p>Can't-miss diagnoses with status: <span class="tag ok">excluded</span> / <span class="tag warn">needs work-up</span>.</p></div>
-    <div class="card frag"><h3>Points of disagreement</h3><p>Where &amp; why specialists diverged — <strong>never hidden</strong>.</p></div>
-    <div class="card frag"><h3>Next steps</h3><p>Investigations &amp; referrals with rationale.</p></div>
-    <div class="card frag"><h3>Confidence &amp; status</h3><p>Converged vs. <strong>escalated-to-human</strong>.</p></div>
-    <div class="card frag"><h3>Full audit trail</h3><p>The replayable debate transcript + Evidence Ledger.</p></div>
-  </div>
-  <p class="frag mono" style="margin-top:18px;font-size:12px;color:var(--ink-faint)">Design principle: the clinical value is in knowing what MedJar is unsure about.</p>
-</section>
-
-<!-- 14 WORKED CASE -->
-<section class="slide" data-auto="12">
-  <div class="kicker frag show">Worked Case · synthetic &amp; illustrative</div>
-  <h2 class="frag">58 y/o · dyspnea · weight loss · spiculated RUL nodule · ↑troponin · pericardial effusion</h2>
-  <div class="cols c3">
-    <div class="card frag"><h3>🩻 Radiologist</h3><p>Spiculated RUL nodule → <strong>primary lung malignancy</strong> high; recommends PET-CT + biopsy; notes effusion.</p></div>
-    <div class="card frag"><h3>🫀 Cardiologist</h3><p>↑troponin + effusion → must exclude <strong>ACS</strong> &amp; <strong>tamponade</strong>; troponin may be demand ischemia.</p></div>
-    <div class="card frag"><h3>🎗️ Oncologist</h3><p>Suspects primary lung Ca; effusion could be <strong>malignant → upstage</strong>… but needs cytology.</p></div>
-  </div>
-  <div class="cols c2 frag" style="margin-top:22px">
-    <div class="card plain"><h3>Debate resolves</h3><p>Consensus: <strong>tissue + effusion cytology</strong> are the discriminating tests. Disagreement on <em>stage</em> remains.</p></div>
-    <div class="card plain" style="border-color:rgba(255,93,108,.4)"><h3 style="color:var(--red)">Red-flag → escalate</h3><p><strong>Tamponade</strong> is the can't-miss. Report ships with an explicit open question: hemodynamic compromise? → urgent human review.</p></div>
-  </div>
-</section>
-
-<!-- 15 EVALUATION -->
-<section class="slide" data-auto="10">
-  <div class="kicker frag show">Evaluation</div>
-  <h2 class="frag">Judged as a <span class="grad">decision-support tool</span>, not a quiz-taker</h2>
-  <div class="cols c4">
-    <div class="card frag center"><div class="big-num grad">Top-3</div><p>Differential hit rate vs. gold diagnosis</p></div>
-    <div class="card frag center"><div class="big-num grad">ECE</div><p>Calibration — Brier + reliability diagrams</p></div>
-    <div class="card frag center"><div class="big-num grad">Recall</div><p>Can't-miss sensitivity &amp; false-reassurance rate</p></div>
-    <div class="card frag center"><div class="big-num grad">Ground</div><p>% claims entailed by their citation</p></div>
-  </div>
-  <div class="cols c2 frag" style="margin-top:22px">
-    <div class="card plain"><h3>Ablations</h3><p>Single vs. ensemble · vote vs. debate · with/without RAG · calibrated vs. raw confidence.</p></div>
-    <div class="card plain"><h3>Human eval + silent trial</h3><p>Blinded specialists rate correctness/safety/actionability; prospective read-only comparison to confirmed diagnoses.</p></div>
-  </div>
-  <p class="frag mono" style="margin-top:16px;font-size:12px;color:var(--ink-faint)">Primary safety endpoint = false-reassurance rate (down-ranking a can't-miss dx that was in fact present).</p>
-</section>
-
-<!-- 16 SAFETY / ETHICS -->
-<section class="slide" data-auto="10">
-  <div class="kicker frag show">Safety · Ethics · Regulatory</div>
-  <h2 class="frag">Assistive by design — the clinician decides</h2>
-  <div class="cols c2">
-    <div class="stack">
-      <div class="card frag"><h3>Human gate</h3><p><strong>Mandatory sign-off</strong> before any recommendation informs care. Uncertainty &amp; red-flags <strong>escalate</strong> rather than closing the case.</p></div>
-      <div class="card frag"><h3>Privacy &amp; security</h3><p>HIPAA/GDPR de-id · PHI enclave · encryption · full access audit · no training on patient data without governance.</p></div>
-    </div>
-    <div class="stack">
-      <div class="card frag"><h3>Regulatory posture</h3><p>Likely <strong>SaMD</strong> (FDA) / MDR (EU). Transparent evidence targets the "clinician can independently review the basis" pathway. Follows GMLP.</p></div>
-      <div class="card frag"><h3>Bias &amp; equity</h3><p>Corpus + evaluation stratified by demographics; calibration checked per subgroup; continuous fairness monitoring.</p></div>
+    <div class="block frag" style="margin-top:1.3em">
+      <p class="small"><strong>Reasoning contract.</strong> Every turn returns structured output — a differential with per-hypothesis likelihood, <em>supporting</em> and <em>refuting</em> evidence keyed to citation IDs, a discriminating next test, red-flags, and calibrated confidence — never free prose. This makes positions comparable, aggregable, and auditable. A generalist agent is always present to represent the whole patient; the ensemble is a plug-in registry.</p>
     </div>
   </div>
-  <p class="disclaimer frag">⚠ MedJar is decision-support. It does not autonomously diagnose or treat, and is not a substitute for professional medical judgment.</p>
 </section>
 
-<!-- 17 LIMITATIONS -->
-<section class="slide" data-auto="9">
-  <div class="kicker frag show">Honest Accounting · Limitations</div>
-  <h2 class="frag">Where it can fail — and the mitigation</h2>
-  <table class="frag">
-    <thead><tr><th>Failure mode</th><th>Mitigation</th></tr></thead>
-    <tbody>
-      <tr><td>Garbage-in (incomplete case files)</td><td>Cannot order the exam it lacks → escalation gate</td></tr>
-      <tr><td>Correlated errors (shared base model)</td><td>Heterogeneous models + devil's-advocate + RAG grounding</td></tr>
-      <tr><td>Corpus staleness / gaps</td><td>Versioned, curated, evidence-graded corpus</td></tr>
-      <tr><td>Persuasive-but-wrong debate</td><td>Evidence-weighted (not rhetoric-weighted) aggregation</td></tr>
-      <tr><td>Clinician automation bias</td><td>Lead with uncertainty &amp; disagreement; never a bare answer</td></tr>
-      <tr><td>Distribution shift / rare disease</td><td>Escalation is the safety net; silent-trial monitoring</td></tr>
-      <tr><td>Compute &amp; latency</td><td>Bounded R_max + fast single-pass "triage mode"</td></tr>
-    </tbody>
-  </table>
-</section>
-
-<!-- 18 CLOSE / ROADMAP -->
-<section class="slide center" data-auto="0">
-  <div class="kicker frag show">Roadmap &amp; Takeaway</div>
-  <h1 class="frag" style="font-size:clamp(28px,4vw,56px)">From a room of <span class="grad">disagreeing experts</span><br>to one grounded, auditable report.</h1>
-  <div class="cols c4 frag" style="margin-top:34px;max-width:1000px">
-    <div class="card plain center"><h3>Phase 0</h3><p>3 agents, text cases, retrospective validation</p></div>
-    <div class="card plain center"><h3>Phase 1</h3><p>Multimodal + calibration + verifier</p></div>
-    <div class="card plain center"><h3>Phase 2</h3><p>Prospective silent trial</p></div>
-    <div class="card plain center"><h3>Phase 3–4</h3><p>Regulated pilot → scale specialties</p></div>
+<!-- 10 RAG FIGURE -->
+<section class="slide" data-sec="Method">
+  <div class="rh"><span class="sec">Method · Grounding</span><span class="pg"></span></div>
+  <div class="body-wrap">
+    <h2 class="frag show">Retrieval-augmented grounding</h2>
+    <figure class="frag" style="margin-top:.4em">
+      <svg viewBox="0 0 980 250" width="100%" style="max-height:40vh">
+        <defs><marker id="ah2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b6b76"/></marker></defs>
+        <rect class="box" x="16" y="96" width="150" height="58" rx="4"/><text class="lbl-s" x="91" y="120" text-anchor="middle">Agent sub-query</text><text class="lbl-s" x="91" y="138" text-anchor="middle">+ CCO fields</text>
+        <!-- dense / sparse -->
+        <rect class="box" x="216" y="44" width="150" height="52" rx="4"/><text class="lbl" x="291" y="68" text-anchor="middle">Dense</text><text class="lbl-s" x="291" y="86" text-anchor="middle">vector · cosine</text>
+        <rect class="box" x="216" y="152" width="150" height="52" rx="4"/><text class="lbl" x="291" y="176" text-anchor="middle">Sparse</text><text class="lbl-s" x="291" y="194" text-anchor="middle">BM25 · exact terms</text>
+        <rect class="box-a" x="416" y="98" width="130" height="54" rx="4"/><text class="lbl" x="481" y="122" text-anchor="middle" fill="#8a1524">RRF fusion</text><text class="lbl-s" x="481" y="140" text-anchor="middle">rank merge</text>
+        <rect class="box" x="596" y="98" width="150" height="54" rx="4"/><text class="lbl" x="671" y="122" text-anchor="middle">Cross-encoder</text><text class="lbl-s" x="671" y="140" text-anchor="middle">re-rank top-N</text>
+        <rect class="box" x="796" y="98" width="168" height="54" rx="4"/><text class="lbl" x="880" y="122" text-anchor="middle">NLI groundedness</text><text class="lbl-s" x="880" y="140" text-anchor="middle">→ Evidence Ledger</text>
+        <path class="arw" style="marker-end:url(#ah2)" d="M166,110 L214,70"/>
+        <path class="arw" style="marker-end:url(#ah2)" d="M166,140 L214,178"/>
+        <path class="arw" style="marker-end:url(#ah2)" d="M366,70 L414,116"/>
+        <path class="arw" style="marker-end:url(#ah2)" d="M366,178 L414,134"/>
+        <path class="arw" style="marker-end:url(#ah2)" d="M546,125 L594,125"/>
+        <path class="arw" style="marker-end:url(#ah2)" d="M746,125 L794,125"/>
+      </svg>
+      <figcaption class="figcap"><b>Fig. 3.</b> Hybrid retrieval with reciprocal-rank fusion &nbsp;
+        <span class="mono" style="font-size:12px">RRF(d) = Σ<sub>r</sub> 1 / (k + rank<sub>r</sub>(d)), &nbsp;k≈60</span>. Each surviving claim must be entailed by its cited passage before it can enter the debate.</figcaption>
+    </figure>
+    <p class="sub frag" style="margin-top:.6em;text-align:center">The corpus is versioned with effective dates and evidence grades, so recency and strength of evidence are first-class.</p>
   </div>
-  <div class="frag" style="margin-top:38px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
-    <span class="pill"><span class="dot" style="background:var(--teal)"></span>Grounded</span>
-    <span class="pill"><span class="dot" style="background:var(--blue)"></span>Transparent</span>
-    <span class="pill"><span class="dot" style="background:var(--violet)"></span>Calibrated</span>
-    <span class="pill"><span class="dot" style="background:var(--green)"></span>Safe</span>
-    <span class="pill"><span class="dot" style="background:var(--amber)"></span>Auditable</span>
-  </div>
-  <p class="frag mono" style="margin-top:34px;font-size:13px;color:var(--ink-dim)">MedJar · Medical Judgment via Agent Reasoning · Thank you</p>
 </section>
 
+<!-- 11 DEBATE PROTOCOL FIGURE -->
+<section class="slide" data-sec="Method">
+  <div class="rh"><span class="sec">Method · Debate</span><span class="pg"></span></div>
+  <div class="body-wrap">
+    <h2 class="frag show">The debate protocol</h2>
+    <figure class="frag" style="margin-top:.5em">
+      <svg viewBox="0 0 980 210" width="100%" style="max-height:32vh">
+        <defs><marker id="ah3" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b6b76"/></marker></defs>
+        <rect class="box" x="20" y="60" width="180" height="64" rx="4"/><text class="lbl" x="110" y="86" text-anchor="middle">1 · Propose</text><text class="lbl-s" x="110" y="106" text-anchor="middle">independent, isolated</text>
+        <rect class="box" x="250" y="60" width="180" height="64" rx="4"/><text class="lbl" x="340" y="86" text-anchor="middle">2 · Critique</text><text class="lbl-s" x="340" y="106" text-anchor="middle">anonymized, grounded</text>
+        <rect class="box" x="480" y="60" width="180" height="64" rx="4"/><text class="lbl" x="570" y="86" text-anchor="middle">3 · Rebut</text><text class="lbl-s" x="570" y="106" text-anchor="middle">revise + re-retrieve</text>
+        <rect class="box-a" x="710" y="60" width="180" height="64" rx="4"/><text class="lbl" x="800" y="86" text-anchor="middle" fill="#8a1524">4 · Assess</text><text class="lbl-s" x="800" y="106" text-anchor="middle">measure D̄, red-flags</text>
+        <path class="arw" style="marker-end:url(#ah3)" d="M200,92 L248,92"/>
+        <path class="arw" style="marker-end:url(#ah3)" d="M430,92 L478,92"/>
+        <path class="arw" style="marker-end:url(#ah3)" d="M660,92 L708,92"/>
+        <!-- loop back if not converged -->
+        <path class="arw" style="marker-end:url(#ah3)" d="M800,124 L800,170 L110,170 L110,126"/>
+        <text class="lbl-s" x="455" y="188" text-anchor="middle">loop while  D̄ &gt; τ  and  r &lt; R<tspan baseline-shift="sub">max</tspan></text>
+      </svg>
+      <figcaption class="figcap"><b>Fig. 4.</b> Rounds proceed until agreement or a compute bound; a red-flag ("can't-miss") diagnosis above threshold forces immediate human escalation.</figcaption>
+    </figure>
+    <div class="cols c2 frag" style="margin-top:.9em">
+      <div class="block accent-l"><h3>Debate, not voting</h3><p class="small">Majority voting discards <em>why</em> agents disagree and silences the minority can't-miss diagnosis. Debate operates on grounded reasons.</p></div>
+      <div class="block accent-l"><h3>Disagreement as signal</h3><p class="small">Points of contention determine what is retrieved next and whether the case must escalate.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 12 CONSENSUS MATH -->
+<section class="slide" data-sec="Method">
+  <div class="rh"><span class="sec">Method · Consensus</span><span class="pg"></span></div>
+  <div class="body-wrap">
+    <h2 class="frag show">Consensus formalization</h2>
+    <p class="lead frag" style="margin:.3em 0 .9em">Over the shared hypothesis space <span class="mono">h ∈ H</span>, agent <span class="mono">i</span> reports likelihood <span class="mono">p<sub>i</sub>(h)</span> with calibrated confidence <span class="mono">c<sub>i</sub></span> and a soft specialty weight <span class="mono">w<sub>i</sub>(h)</span> (higher inside its domain — a soft mixture of experts, not a hard router).</p>
+    <div class="frag" style="margin:.4em 0 1em">
+      <div class="eq">Ensemble score &nbsp; S(h) =
+        <span class="frac"><span class="num">Σ<sub>i</sub> w<sub>i</sub>(h)·c<sub>i</sub>·p<sub>i</sub>(h)</span><span class="den">Σ<sub>i</sub> w<sub>i</sub>(h)·c<sub>i</sub></span></span>
+        <span class="eqn-label">(1)</span>
+      </div>
+    </div>
+    <div class="frag" style="margin:.9em 0">
+      <div class="eq">Evidence adjustment &nbsp; S<sup>*</sup>(h) = σ( α · logit S(h) + β · E(h) )
+        <span class="eqn-label">(2)</span>
+      </div>
+      <p class="small sub" style="margin-top:.5em"><span class="mono">E(h)</span> = weighted (supporting − refuting) grounded citations, so higher-grade, more recent evidence is rewarded; <span class="mono">σ</span> is the logistic function.</p>
+    </div>
+    <div class="block frag" style="margin-top:.4em"><p class="small">Confidences <span class="mono">c<sub>i</sub></span> are post-hoc calibrated (temperature / Platt scaling on a held-out set) so that stated confidence matches empirical accuracy — a prerequisite for trustworthy weighting.</p></div>
+  </div>
+</section>
+
+<!-- 13 DISAGREEMENT + STOPPING -->
+<section class="slide" data-sec="Method">
+  <div class="rh"><span class="sec">Method · Control</span><span class="pg"></span></div>
+  <div class="body-wrap">
+    <h2 class="frag show">Disagreement as a control signal</h2>
+    <div class="frag" style="margin:.5em 0 1em">
+      <div class="eq">Disagree(h) =
+        <span class="frac"><span class="num">Σ<sub>i</sub> w<sub>i</sub>(h)·c<sub>i</sub>·( p<sub>i</sub>(h) − S(h) )<sup>2</sup></span><span class="den">Σ<sub>i</sub> w<sub>i</sub>(h)·c<sub>i</sub></span></span>
+        <span class="eqn-label">(3)</span>
+      </div>
+      <p class="small sub" style="margin-top:.5em">A confidence-weighted variance across agents; the case-level signal <span class="mono">D̄</span> is its mean over the top-<span class="mono">k</span> hypotheses.</p>
+    </div>
+    <h3 class="frag" style="margin-top:.6em">Stopping rule — the debate halts when any of:</h3>
+    <table class="tbl frag" style="margin-top:.5em;max-width:44em">
+      <tbody>
+        <tr><td class="mono" style="color:var(--ok);width:9em">converge</td><td>D̄ ≤ τ<sub>agree</sub></td><td>aggregate via Eqs. (1)–(2)</td></tr>
+        <tr><td class="mono" style="width:9em">bound</td><td>r = R<sub>max</sub></td><td>escalate with open disagreement</td></tr>
+        <tr><td class="mono accent" style="width:9em">red-flag</td><td>any can't-miss dx &gt; τ<sub>flag</sub></td><td><strong>immediate human escalation</strong></td></tr>
+      </tbody>
+    </table>
+    <p class="sub frag" style="margin-top:1em">Aggregation rewards <em>grounded evidence</em>, not rhetoric — an eloquent but unsupported argument cannot win.</p>
+  </div>
+</section>
+
+<!-- 14 ORCHESTRATOR FSM -->
+<section class="slide" data-sec="Method">
+  <div class="rh"><span class="sec">Method · Orchestration</span><span class="pg"></span></div>
+  <div class="body-wrap">
+    <h2 class="frag show">Deterministic orchestration</h2>
+    <p class="lead frag" style="margin:.3em 0 .6em">Control flow is a deterministic state machine — <em>not</em> a free-form LLM — so it is predictable, testable, and auditable.</p>
+    <figure class="frag">
+      <svg viewBox="0 0 980 220" width="100%" style="max-height:34vh">
+        <defs><marker id="ah4" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b6b76"/></marker></defs>
+        <g class="lbl" text-anchor="middle">
+          <rect class="box" x="18" y="86" width="120" height="46" rx="4"/><text x="78" y="114">Intake</text>
+          <rect class="box" x="170" y="86" width="120" height="46" rx="4"/><text x="230" y="114">Propose</text>
+          <rect class="box" x="322" y="86" width="120" height="46" rx="4"/><text x="382" y="114">Critique</text>
+          <rect class="box" x="474" y="86" width="120" height="46" rx="4"/><text x="534" y="114">Rebut</text>
+          <rect class="box-a" x="626" y="86" width="120" height="46" rx="4"/><text x="686" y="114" fill="#8a1524">Assess</text>
+          <rect class="box" x="820" y="24" width="140" height="46" rx="4"/><text x="890" y="52" style="fill:#2f6b3f">Consensus</text>
+          <rect class="box" x="820" y="150" width="140" height="46" rx="4"/><text x="890" y="178" fill="#8a1524">Escalate</text>
+          <rect class="box" x="820" y="86" width="0" height="0"/>
+        </g>
+        <path class="arw" style="marker-end:url(#ah4)" d="M138,109 L168,109"/>
+        <path class="arw" style="marker-end:url(#ah4)" d="M290,109 L320,109"/>
+        <path class="arw" style="marker-end:url(#ah4)" d="M442,109 L472,109"/>
+        <path class="arw" style="marker-end:url(#ah4)" d="M594,109 L624,109"/>
+        <path class="arw" style="marker-end:url(#ah4)" d="M746,100 L818,55"/><text class="lbl-s" x="792" y="80">converged</text>
+        <path class="arw" style="marker-end:url(#ah4)" d="M746,120 L818,166"/><text class="lbl-s" x="770" y="150">red-flag / bound</text>
+        <path class="arw" style="marker-end:url(#ah4)" d="M686,132 L686,206 L230,206 L230,134"/><text class="lbl-s" x="458" y="200" text-anchor="middle">loop (not converged, r &lt; R_max)</text>
+        <path class="arw" style="marker-end:url(#ah4)" d="M890,70 L890,150" opacity="0"/>
+        <text class="lbl-s" x="890" y="216" text-anchor="middle" fill="#2f6b3f">→ Report</text>
+      </svg>
+      <figcaption class="figcap"><b>Fig. 5.</b> The Chief-of-Service state machine. It enforces the reasoning contract, anonymizes critiques, computes D̄, and owns the Evidence Ledger and replayable audit log.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 15 SECTION: EVALUATION -->
+<section class="slide divider" data-sec="Evaluation">
+  <div class="rh"><span class="sec">Part III</span><span class="pg"></span></div>
+  <div class="body-wrap">
+    <div class="sec-no frag show">III</div>
+    <h1 class="frag">Evaluation</h1>
+    <p class="sub frag">Protocol, and illustrative results for accuracy, calibration, and convergence.</p>
+  </div>
+</section>
+<!-- 16 EXPERIMENTAL SETUP -->
+<section class="slide" data-sec="Evaluation">
+  <div class="rh"><span class="sec">Evaluation · Protocol</span><span class="pg"></span></div>
+  <div class="body-wrap">
+    <h2 class="frag show">Experimental protocol</h2>
+    <div class="cols c2" style="margin-top:.5em">
+      <div>
+        <h3 class="frag">Data</h3>
+        <ul class="pts frag">
+          <li>Knowledge probes: MedQA (USMLE), MedMCQA, PubMedQA.</li>
+          <li>Case-based: clinicopathological-conference cases with confirmed final diagnoses; MIMIC-derived scenarios.</li>
+          <li>Prospective silent trial: read-only, alongside real workups, no influence on care.</li>
+        </ul>
+        <h3 class="frag" style="margin-top:1em">Baselines &amp; ablations</h3>
+        <ul class="pts frag">
+          <li>Single specialist agent; majority-vote ensemble.</li>
+          <li>MedJar without RAG; without calibration.</li>
+          <li>Full MedJar (debate + scoped RAG + calibration).</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="frag">Metrics</h3>
+        <table class="tbl frag" style="margin-top:.4em">
+          <tbody>
+            <tr><td><strong>Accuracy</strong></td><td>Top-1 / Top-3 differential hit rate</td></tr>
+            <tr><td><strong>Calibration</strong></td><td>ECE, Brier score, reliability diagram</td></tr>
+            <tr><td><strong>Safety</strong></td><td>can't-miss recall; false-reassurance rate <span class="accent">(primary)</span></td></tr>
+            <tr><td><strong>Grounding</strong></td><td>% claims entailed by cited passage</td></tr>
+            <tr><td><strong>Utility</strong></td><td>blinded specialist ratings</td></tr>
+            <tr><td><strong>Cost</strong></td><td>latency, tokens, rounds-to-converge</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="illus frag" style="margin-top:1.1em">The figures that follow are illustrative / simulated to communicate the expected effects and analysis format; they are not measured results.</p>
+  </div>
+</section>
+
+<!-- 17 ABLATION CHART -->
+<section class="slide" data-sec="Evaluation">
+  <div class="rh"><span class="sec">Evaluation · Results</span><span class="pg"></span></div>
+  <div class="body-wrap">
+    <h2 class="frag show">Ablation: each component contributes</h2>
+    <div class="cols c2-wide" style="margin-top:.5em;align-items:center">
+      <figure class="frag">
+        <svg viewBox="0 0 560 320" width="100%" style="max-height:52vh">
+          <!-- axes -->
+          <line class="axis" x1="60" y1="30" x2="60" y2="270"/>
+          <line class="axis" x1="60" y1="270" x2="530" y2="270"/>
+          <g class="tick" text-anchor="end">
+            <text x="52" y="274">0</text><line class="grid" x1="60" y1="210" x2="530" y2="210"/><text x="52" y="214">25</text>
+            <line class="grid" x1="60" y1="150" x2="530" y2="150"/><text x="52" y="154">50</text>
+            <line class="grid" x1="60" y1="90" x2="530" y2="90"/><text x="52" y="94">75</text>
+            <line class="grid" x1="60" y1="30" x2="530" y2="30"/><text x="52" y="34">100</text>
+          </g>
+          <text class="tick" x="18" y="150" transform="rotate(-90 18 150)" text-anchor="middle">Top-3 accuracy (%)</text>
+          <!-- bars -->
+          <g>
+            <rect x="92" y="123.6" width="72" height="146.4" fill="#6b6b76"/><text class="lbl" x="128" y="116" text-anchor="middle">61</text>
+            <rect x="196" y="106.8" width="72" height="163.2" fill="#2f4b6e"/><text class="lbl" x="232" y="99" text-anchor="middle">68</text>
+            <rect x="300" y="92.4" width="72" height="177.6" fill="#b08322"/><text class="lbl" x="336" y="85" text-anchor="middle">74</text>
+            <rect x="404" y="70.8" width="72" height="199.2" fill="#8a1524"/><text class="lbl" x="440" y="63" text-anchor="middle">83</text>
+          </g>
+          <g class="lbl-s" text-anchor="middle">
+            <text x="128" y="286">Single</text><text x="128" y="300">agent</text>
+            <text x="232" y="286">Majority</text><text x="232" y="300">vote</text>
+            <text x="336" y="286">Debate,</text><text x="336" y="300">no RAG</text>
+            <text x="440" y="286">MedJar</text><text x="440" y="300">(full)</text>
+          </g>
+        </svg>
+        <figcaption class="figcap"><b>Fig. 6.</b> Top-3 differential accuracy across ablations. <span class="illus">Illustrative</span></figcaption>
+      </figure>
+      <div>
+        <ul class="pts">
+          <li class="frag"><strong>Ensembling</strong> (vote) adds over a single agent, but plateaus — it ignores <em>why</em> agents differ.</li>
+          <li class="frag"><strong>Structured debate</strong> adds more by reconciling reasons.</li>
+          <li class="frag"><strong>Scoped RAG</strong> yields the largest single gain and suppresses hallucination.</li>
+          <li class="frag">The full system compounds these effects.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 18 CALIBRATION -->
+<section class="slide" data-sec="Evaluation">
+  <div class="rh"><span class="sec">Evaluation · Results</span><span class="pg"></span></div>
+  <div class="body-wrap">
+    <h2 class="frag show">Calibration matters for trust</h2>
+    <div class="cols c2-wide" style="margin-top:.4em;align-items:center">
+      <figure class="frag">
+        <svg viewBox="0 0 360 360" width="100%" style="max-height:54vh">
+          <line class="axis" x1="50" y1="30" x2="50" y2="310"/>
+          <line class="axis" x1="50" y1="310" x2="330" y2="310"/>
+          <!-- diagonal perfect -->
+          <line class="refline" x1="50" y1="310" x2="330" y2="30"/>
+          <text class="tick" x="300" y="52" transform="rotate(-45 300 52)">perfect</text>
+          <!-- uncalibrated (overconfident) -->
+          <polyline fill="none" stroke="#6b6b76" stroke-width="2" points="78,293.2 134,248.4 190,198 246,153.2 302,108.4"/>
+          <g fill="#6b6b76"><circle cx="78" cy="293.2" r="3.5"/><circle cx="134" cy="248.4" r="3.5"/><circle cx="190" cy="198" r="3.5"/><circle cx="246" cy="153.2" r="3.5"/><circle cx="302" cy="108.4" r="3.5"/></g>
+          <!-- calibrated -->
+          <polyline fill="none" stroke="#8a1524" stroke-width="2.2" points="78,279.2 134,228.8 190,167.2 246,116.8 302,58"/>
+          <g fill="#8a1524"><circle cx="78" cy="279.2" r="3.5"/><circle cx="134" cy="228.8" r="3.5"/><circle cx="190" cy="167.2" r="3.5"/><circle cx="246" cy="116.8" r="3.5"/><circle cx="302" cy="58" r="3.5"/></g>
+          <g class="tick" text-anchor="middle"><text x="50" y="326">0</text><text x="190" y="326">0.5</text><text x="330" y="326">1.0</text></g>
+          <text class="tick" x="190" y="346" text-anchor="middle">predicted probability</text>
+          <text class="tick" x="20" y="170" transform="rotate(-90 20 170)" text-anchor="middle">observed frequency</text>
+          <!-- legend -->
+          <g><line x1="200" y1="300" x2="222" y2="300" stroke="#8a1524" stroke-width="2.2"/><text class="tick" x="226" y="304">post-hoc calibrated</text>
+             <line x1="200" y1="318" x2="222" y2="318" stroke="#6b6b76" stroke-width="2"/><text class="tick" x="226" y="322">raw (overconfident)</text></g>
+        </svg>
+        <figcaption class="figcap"><b>Fig. 7.</b> Reliability diagram. <span class="illus">Illustrative</span></figcaption>
+      </figure>
+      <div>
+        <p class="lead frag">Raw model confidence sits <em>below</em> the diagonal — overconfident. Temperature / Platt scaling on held-out data pulls the curve toward the identity line.</p>
+        <p class="lead frag" style="margin-top:.8em">Only calibrated confidences can be trusted as the weights <span class="mono">c<sub>i</sub></span> in Eq. (1). We report <strong>ECE</strong> and <strong>Brier</strong> alongside accuracy.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 19 CONVERGENCE -->
+<section class="slide" data-sec="Evaluation">
+  <div class="rh"><span class="sec">Evaluation · Results</span><span class="pg"></span></div>
+  <div class="body-wrap">
+    <h2 class="frag show">Disagreement drives the stopping decision</h2>
+    <div class="cols c2-wide" style="margin-top:.4em;align-items:center">
+      <figure class="frag">
+        <svg viewBox="0 0 560 320" width="100%" style="max-height:52vh">
+          <line class="axis" x1="70" y1="40" x2="70" y2="280"/>
+          <line class="axis" x1="70" y1="280" x2="530" y2="280"/>
+          <g class="tick" text-anchor="end"><text x="62" y="284">0</text><text x="62" y="164">0.25</text><text x="62" y="44">0.50</text></g>
+          <line class="grid" x1="70" y1="160" x2="530" y2="160"/>
+          <text class="tick" x="24" y="160" transform="rotate(-90 24 160)" text-anchor="middle">mean disagreement  D̄</text>
+          <!-- threshold -->
+          <line class="refline" stroke="#2f6b3f" x1="70" y1="222.4" x2="530" y2="222.4"/><text class="tick" x="526" y="216" text-anchor="end" fill="#2f6b3f">τ = 0.12</text>
+          <!-- case A converge -->
+          <polyline fill="none" stroke="#8a1524" stroke-width="2.4" points="70,78.4 182.5,145.6 295,208 407.5,241.6 520,256"/>
+          <g fill="#8a1524"><circle cx="70" cy="78.4" r="4"/><circle cx="182.5" cy="145.6" r="4"/><circle cx="295" cy="208" r="4"/><circle cx="407.5" cy="241.6" r="4"/><circle cx="520" cy="256" r="4"/></g>
+          <!-- case B escalate -->
+          <polyline fill="none" stroke="#2f4b6e" stroke-width="2.4" stroke-dasharray="6 4" points="70,64 182.5,88 295,116.8 407.5,131.2 520,136"/>
+          <g fill="#2f4b6e"><circle cx="70" cy="64" r="4"/><circle cx="182.5" cy="88" r="4"/><circle cx="295" cy="116.8" r="4"/><circle cx="407.5" cy="131.2" r="4"/><circle cx="520" cy="136" r="4"/></g>
+          <g class="tick" text-anchor="middle"><text x="70" y="298">0</text><text x="182.5" y="298">1</text><text x="295" y="298">2</text><text x="407.5" y="298">3</text><text x="520" y="298">4</text></g>
+          <text class="tick" x="300" y="314" text-anchor="middle">debate round r</text>
+          <text class="lbl-s" x="360" y="250" fill="#8a1524">Case A → converges</text>
+          <text class="lbl-s" x="360" y="120" fill="#2f4b6e">Case B → escalates (D̄ &gt; τ)</text>
+        </svg>
+        <figcaption class="figcap"><b>Fig. 8.</b> Disagreement trajectories. <span class="illus">Illustrative</span></figcaption>
+      </figure>
+      <div>
+        <p class="lead frag">Most cases converge within a few rounds (Case A). When agents cannot reconcile (Case B), <span class="mono">D̄</span> stays above <span class="mono">τ</span> and the case is <strong>escalated with the open disagreement made explicit</strong> — the safety-preserving default.</p>
+        <p class="lead frag" style="margin-top:.7em">This gives a principled, compute-bounded criterion for "we are not sure — ask a human."</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 20 WORKED CASE -->
+<section class="slide" data-sec="Evaluation">
+  <div class="rh"><span class="sec">Evaluation · Case study</span><span class="pg"></span></div>
+  <div class="body-wrap">
+    <h2 class="frag show">Worked case</h2>
+    <p class="sub frag" style="margin:.2em 0 .8em">58-year-old: progressive dyspnea, weight loss, spiculated right-upper-lobe nodule on CT, mildly elevated troponin, small pericardial effusion. <span class="illus">Synthetic</span></p>
+    <div class="cols c3">
+      <div class="block frag"><h3 class="accent">Radiologist</h3><p class="small">Spiculated nodule → primary lung malignancy leads; recommends PET-CT and biopsy; notes effusion.</p></div>
+      <div class="block frag"><h3 class="accent">Cardiologist</h3><p class="small">Troponin + effusion → exclude ACS and tamponade physiology first; troponin may be demand ischemia.</p></div>
+      <div class="block frag"><h3 class="accent">Oncologist</h3><p class="small">Malignant effusion would upstage — but requires cytologic confirmation, not assumption.</p></div>
+    </div>
+    <div class="cols c2 frag" style="margin-top:1em">
+      <div class="block accent-l"><h3>Reconciliation</h3><p class="small">Debate converges on the discriminating tests — <strong>tissue biopsy + effusion cytology</strong>; residual disagreement remains on <em>stage</em>.</p></div>
+      <div class="block accent-l"><h3 style="color:var(--accent)">Red-flag → escalate</h3><p class="small"><strong>Tamponade</strong> is the can't-miss. The report ships with an explicit open question — hemodynamic compromise? — for urgent human review.</p></div>
+    </div>
+  </div>
+</section>
+<!-- 21 SAFETY / LIMITATIONS -->
+<section class="slide" data-sec="Discussion">
+  <div class="rh"><span class="sec">Discussion</span><span class="pg"></span></div>
+  <div class="body-wrap">
+    <h2 class="frag show">Safety, limitations, and honest failure modes</h2>
+    <div class="cols c2" style="margin-top:.5em">
+      <div>
+        <h3 class="frag">Safeguards</h3>
+        <ul class="pts frag">
+          <li>Mandatory clinician sign-off; the system recommends, never acts.</li>
+          <li>Uncertainty and red-flags escalate rather than close a case.</li>
+          <li>HIPAA/GDPR de-identification; PHI enclave; full access audit.</li>
+          <li>Likely regulated as SaMD; transparent evidence supports independent review.</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="frag">Where it can fail — and mitigation</h3>
+        <table class="tbl frag" style="margin-top:.3em">
+          <tbody>
+            <tr><td>Incomplete case files</td><td>escalation gate</td></tr>
+            <tr><td>Correlated errors (shared base)</td><td>heterogeneous models + devil's advocate</td></tr>
+            <tr><td>Corpus staleness</td><td>versioned, evidence-graded curation</td></tr>
+            <tr><td>Persuasive-but-wrong</td><td>evidence-weighted, not rhetoric-weighted</td></tr>
+            <tr><td>Clinician automation bias</td><td>lead with uncertainty &amp; disagreement</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="sub frag" style="margin-top:1.1em">MedJar is decision-support. It does not autonomously diagnose or treat, and is not a substitute for professional medical judgment.</p>
+  </div>
+</section>
+
+<!-- 22 CONCLUSION -->
+<section class="slide" data-sec="Conclusion">
+  <div class="rh"><span class="sec">Conclusion</span><span class="pg"></span></div>
+  <div class="body-wrap">
+    <h2 class="frag show">Conclusion</h2>
+    <p class="lead frag" style="margin:.4em 0 1em">MedJar operationalizes the multidisciplinary case conference as a computational protocol: specialist agents that <strong>reason independently</strong>, <strong>ground every claim</strong>, <strong>debate their differences</strong>, and converge on a <strong>calibrated, auditable</strong> diagnosis — escalating to a human exactly when they should.</p>
+    <div class="cols c3 frag">
+      <div class="block accent-l"><h3>Grounded &amp; transparent</h3><p class="small">No claim without a checkable citation; the full debate is replayable.</p></div>
+      <div class="block accent-l"><h3>Calibrated &amp; safe</h3><p class="small">Confidence is trustworthy; disagreement and red-flags route to humans.</p></div>
+      <div class="block accent-l"><h3>Assistive by design</h3><p class="small">The clinician remains the decision-maker and is accountable for care.</p></div>
+    </div>
+    <p class="sub frag" style="margin-top:1.3em">Next: multimodal ingestion and calibration → prospective silent trial → regulated, human-in-the-loop pilot.</p>
+  </div>
+</section>
+
+<!-- 23 REFERENCES -->
+<section class="slide" data-sec="References">
+  <div class="rh"><span class="sec">References</span><span class="pg"></span></div>
+  <div class="body-wrap">
+    <h2 class="frag show">Selected references</h2>
+    <ul class="ref frag" style="margin-top:.5em;columns:2;column-gap:3vw">
+      <li class="small" style="margin:.5em 0;break-inside:avoid">[1] National Academies of Sciences, Engineering, and Medicine. <em>Improving Diagnosis in Health Care.</em> 2015.</li>
+      <li class="small" style="margin:.5em 0;break-inside:avoid">[2] Du et al. Improving factuality and reasoning in language models through multiagent debate. 2023.</li>
+      <li class="small" style="margin:.5em 0;break-inside:avoid">[3] Madaan et al. Self-Refine: iterative refinement with self-feedback. 2023.</li>
+      <li class="small" style="margin:.5em 0;break-inside:avoid">[4] Lewis et al. Retrieval-augmented generation for knowledge-intensive NLP. 2020.</li>
+      <li class="small" style="margin:.5em 0;break-inside:avoid">[5] Cormack et al. Reciprocal rank fusion. 2009.</li>
+      <li class="small" style="margin:.5em 0;break-inside:avoid">[6] Jin et al. What disease does this patient have? (MedQA / USMLE). 2021.</li>
+      <li class="small" style="margin:.5em 0;break-inside:avoid">[7] Pal et al. MedMCQA. 2022.</li>
+      <li class="small" style="margin:.5em 0;break-inside:avoid">[8] Singhal et al. Large language models encode clinical knowledge. 2023.</li>
+      <li class="small" style="margin:.5em 0;break-inside:avoid">[9] Guo et al. On calibration of modern neural networks. 2017.</li>
+      <li class="small" style="margin:.5em 0;break-inside:avoid">[10] U.S. FDA. Clinical Decision Support Software — guidance &amp; GMLP principles.</li>
+    </ul>
+    <p class="illus frag" style="margin-top:1em">Citation details are indicative and must be verified against primary sources before publication.</p>
+    <p class="sub frag" style="margin-top:1.4em;text-align:center">MedJar · Consensus Diagnosis by Debating Specialist Agents · Thank you</p>
+  </div>
+</section>
+<!--END-->
 </div>
-
 <div class="dots" id="dots"></div>
-<div class="hint">← → / Space · <b id="autobtn" class="btn" style="padding:4px 8px">▶ Auto</b> · F Fullscreen</div>
-<div class="chrome"><span id="counter">01 / 18</span></div>
+<div class="hint">← → navigate&nbsp;·&nbsp;<span id="autobtn" class="btn" style="padding:2px 7px">Auto</span>&nbsp;·&nbsp;F fullscreen</div>
+<div class="chrome"><span id="counter">1 / 1</span></div>
+<script>(function(){
+  const slides=[...document.querySelectorAll('.slide')];
+  const total=slides.length;
+  const progress=document.getElementById('progress');
+  const counter=document.getElementById('counter');
+  const dotsWrap=document.getElementById('dots');
+  const autoBtn=document.getElementById('autobtn');
+  let cur=0, step=0, auto=false, timer=null, relaunch=null;
 
-<script>
-/* ============================================================
-   Presentation engine (vanilla)
-   ============================================================ */
-(function(){
-  const slides = Array.from(document.querySelectorAll('.slide'));
-  const total  = slides.length;
-  const progress = document.getElementById('progress');
-  const counter  = document.getElementById('counter');
-  const dotsWrap = document.getElementById('dots');
-  const autoBtn  = document.getElementById('autobtn');
-  let cur = 0;        // current slide index
-  let step = 0;       // fragment step within slide
-  let auto = false;
-  let autoTimer = null;
-
-  // build nav dots
-  slides.forEach((_,i)=>{
-    const d = document.createElement('i');
-    d.addEventListener('click',()=>{go(i);});
-    dotsWrap.appendChild(d);
-  });
-  const dots = Array.from(dotsWrap.children);
-
-  function frags(s){ return Array.from(s.querySelectorAll('.frag')); }
+  slides.forEach((_,i)=>{const d=document.createElement('i');d.onclick=()=>go(i);dotsWrap.appendChild(d);});
+  const dots=[...dotsWrap.children];
+  const frags=s=>[...s.querySelectorAll('.frag')];
 
   function render(){
     slides.forEach((s,i)=>{
-      s.classList.toggle('active', i===cur);
-      if(i!==cur){ frags(s).forEach(f=>f.classList.remove('show')); }
+      s.classList.toggle('active',i===cur);
+      if(i!==cur) frags(s).forEach(f=>f.classList.remove('show'));
+      // fill running-header page numbers
+      const pg=s.querySelector('.rh .pg'); if(pg) pg.textContent=(i+1)+' / '+total;
     });
-    // reveal fragments up to current step
-    const f = frags(slides[cur]);
-    f.forEach((el,i)=> el.classList.toggle('show', i<=step));
-    // chrome
-    progress.style.width = ((cur + Math.min((step+1)/(f.length||1),1)) / total * 100) + '%';
-    counter.textContent = String(cur+1).padStart(2,'0') + ' / ' + String(total).padStart(2,'0');
-    dots.forEach((d,i)=> d.classList.toggle('on', i===cur));
-    location.hash = 's'+(cur+1);
+    const f=frags(slides[cur]);
+    f.forEach((el,i)=>el.classList.toggle('show',i<=step));
+    progress.style.width=((cur+Math.min((step+1)/(f.length||1),1))/total*100)+'%';
+    counter.textContent=(cur+1)+' / '+total;
+    dots.forEach((d,i)=>d.classList.toggle('on',i===cur));
+    location.hash='s'+(cur+1);
   }
+  const maxStep=()=>frags(slides[cur]).length-1;
+  function next(){ if(step<maxStep()){step++;render();} else if(cur<total-1){cur++;step=0;render();} else stopAuto(); }
+  function prev(){ if(step>0){step--;render();} else if(cur>0){cur--;step=maxStep();render();} }
+  function go(i){ cur=Math.max(0,Math.min(total-1,i)); step=0; render(); }
 
-  function maxStep(){ return frags(slides[cur]).length - 1; }
-
-  function next(){
-    if(step < maxStep()){ step++; render(); }
-    else if(cur < total-1){ cur++; step = maxStep()>=0?0:0; // start with first frag shown
-      // show first fragment immediately
-      step = 0; render(); }
-    else { stopAuto(); }
+  function schedule(){ clearTimeout(timer); if(!auto) return;
+    const f=frags(slides[cur]).length;
+    const atEnd=(cur===total-1&&step>=maxStep());
+    if(atEnd){stopAuto();return;}
+    timer=setTimeout(()=>{next();schedule();}, step<maxStep()?1500:2600);
   }
-  function prev(){
-    if(step > 0){ step--; render(); }
-    else if(cur > 0){ cur--; step = maxStep(); render(); }
-  }
-  function go(i){ cur = Math.max(0,Math.min(total-1,i)); step = 0; render(); }
+  function startAuto(){auto=true;autoBtn.textContent='Pause';autoBtn.style.color='var(--accent)';schedule();}
+  function stopAuto(){auto=false;autoBtn.textContent='Auto';autoBtn.style.color='';clearTimeout(timer);}
+  autoBtn.onclick=()=>auto?stopAuto():startAuto();
+  function pauseThenResume(){ if(auto){clearTimeout(timer);clearTimeout(relaunch);relaunch=setTimeout(()=>{if(auto)schedule();},5000);} }
 
-  // autoplay: advance by fragment, timing from data-auto (seconds per slide / steps)
-  function scheduleAuto(){
-    clearTimeout(autoTimer);
-    if(!auto) return;
-    const s = slides[cur];
-    const perSlide = parseFloat(s.dataset.auto||'8');
-    if(perSlide===0){ // final slide: stop
-      stopAuto(); return;
-    }
-    const steps = Math.max(1, frags(s).length);
-    const delay = Math.max(1400, (perSlide*1000)/steps);
-    autoTimer = setTimeout(()=>{ next(); scheduleAuto(); }, delay);
-  }
-  function startAuto(){ auto=true; autoBtn.textContent='❚❚ Auto'; autoBtn.style.color='var(--teal)'; scheduleAuto(); }
-  function stopAuto(){ auto=false; autoBtn.textContent='▶ Auto'; autoBtn.style.color=''; clearTimeout(autoTimer); }
-  autoBtn.addEventListener('click',()=> auto?stopAuto():startAuto());
-
-  // keyboard
   document.addEventListener('keydown',e=>{
-    if(['ArrowRight',' ','PageDown'].includes(e.key)){ e.preventDefault(); stopAutoOnManual(); next(); }
-    else if(['ArrowLeft','PageUp'].includes(e.key)){ e.preventDefault(); stopAutoOnManual(); prev(); }
-    else if(e.key==='Home'){ go(0); }
-    else if(e.key==='End'){ go(total-1); }
-    else if(e.key.toLowerCase()==='f'){ toggleFs(); }
-    else if(e.key.toLowerCase()==='a'){ auto?stopAuto():startAuto(); }
+    if(['ArrowRight',' ','PageDown'].includes(e.key)){e.preventDefault();pauseThenResume();next();}
+    else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();pauseThenResume();prev();}
+    else if(e.key==='Home')go(0); else if(e.key==='End')go(total-1);
+    else if(e.key.toLowerCase()==='f'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.();}
+    else if(e.key.toLowerCase()==='a')auto?stopAuto():startAuto();
   });
-  function stopAutoOnManual(){ if(auto){ clearTimeout(autoTimer); scheduleAutoLater(); } }
-  let relaunch=null;
-  function scheduleAutoLater(){ clearTimeout(relaunch); relaunch=setTimeout(()=>{ if(auto) scheduleAuto(); }, 6000); }
-
-  // click zones (right half = next, left quarter = prev)
   document.getElementById('deck').addEventListener('click',e=>{
-    if(e.target.closest('a,.btn,.dots,input')) return;
-    const x = e.clientX / window.innerWidth;
-    stopAutoOnManual();
-    if(x > 0.35) next(); else prev();
+    if(e.target.closest('a,.btn,.dots')) return;
+    pauseThenResume(); (e.clientX/innerWidth>0.34)?next():prev();
   });
-
-  // touch swipe
   let tx=0;
-  addEventListener('touchstart',e=>{ tx=e.touches[0].clientX; },{passive:true});
-  addEventListener('touchend',e=>{ const dx=e.changedTouches[0].clientX-tx; if(Math.abs(dx)>50){ stopAutoOnManual(); dx<0?next():prev(); } },{passive:true});
+  addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});
+  addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>50){pauseThenResume();dx<0?next():prev();}},{passive:true});
 
-  function toggleFs(){ if(!document.fullscreenElement){ document.documentElement.requestFullscreen?.(); } else { document.exitFullscreen?.(); } }
-
-  // deep-link support
-  const m = location.hash.match(/s(\d+)/);
-  if(m){ cur = Math.min(total-1, Math.max(0, parseInt(m[1],10)-1)); }
+  const m=location.hash.match(/s(\d+)/); if(m)cur=Math.min(total-1,Math.max(0,+m[1]-1));
   render();
-})();
-</script>
+})();</script>
 </body>
 </html>
