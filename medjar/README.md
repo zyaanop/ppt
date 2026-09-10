@@ -143,6 +143,17 @@ slide. Any manual navigation pauses the timer and resumes it after a few seconds
 press `A` (or click **Pause**) to stop it entirely. Timings live in `DWELL` in
 [`build_deck.py`](build_deck.py) if you want them faster or slower.
 
+Figures animate in gently — the diagram settles, then its connectors are drawn — and
+the animation is suppressed entirely for viewers with `prefers-reduced-motion` set.
+
+**Slide copy is deliberately plain.** The formal treatment lives in `PAPER.md`; a slide
+that needs re-reading has failed. [`check_deck.py`](check_deck.py) enforces this with
+word-count and sentence-length budgets and fails the build if a slide gets too dense:
+
+```bash
+python3 build_deck.py && python3 check_deck.py
+```
+
 ---
 
 *Decision support only. A licensed clinician remains the decision-maker and is

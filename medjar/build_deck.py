@@ -3,11 +3,14 @@
 build_deck.py — assemble presentation.html from the generated figures.
 
 The figures in figures/*.svg are inlined into a single self-contained HTML file,
-so the deck can be opened anywhere with no external assets and no network. Run
-after regenerating the figures:
+so the deck opens anywhere with no external assets and no network.
+
+Slide copy is deliberately plain: the formal treatment lives in PAPER.md, and a
+slide that needs re-reading has failed. `check_deck.py` enforces this with word
+and sentence-length budgets.
 
     cd figures && python3 make_figures.py
-    cd ..      && python3 build_deck.py
+    cd ..      && python3 build_deck.py && python3 check_deck.py
 """
 from __future__ import annotations
 
@@ -74,29 +77,33 @@ html,body{height:100%;overflow:hidden;background:#c9c6bd;color:var(--ink);font-f
   color:var(--accent);font-weight:700}
 .rh .pg{font-variant-numeric:tabular-nums;color:var(--faint)}
 .body{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0}
+
+/* type */
 h1{font-family:var(--serif);font-weight:600;font-size:clamp(26px,3.9vw,52px);line-height:1.07}
-h2{font-family:var(--serif);font-weight:600;font-size:clamp(21px,2.55vw,35px);line-height:1.12;
+h2{font-family:var(--serif);font-weight:600;font-size:clamp(22px,2.65vw,36px);line-height:1.12;
   margin-bottom:.1em}
 h2:after{content:"";display:block;width:58px;height:3px;background:var(--accent);margin-top:.38em}
-h3{font-size:clamp(12px,1.16vw,16px);font-weight:700;color:var(--ink);letter-spacing:.01em}
-p,li{font-family:var(--serif);font-size:clamp(13px,1.24vw,19px);line-height:1.5;color:var(--ink2)}
+h3{font-size:clamp(12.5px,1.2vw,16.5px);font-weight:700;color:var(--ink);letter-spacing:.01em}
+p,li{font-family:var(--serif);font-size:clamp(14px,1.34vw,20px);line-height:1.52;color:var(--ink2)}
 .sub{font-family:var(--serif);font-style:italic;color:var(--ink3)}
-.small{font-size:clamp(11px,1.03vw,15px)}
-.tiny{font-size:clamp(10px,.92vw,13px)}
+.small{font-size:clamp(12px,1.08vw,15.5px)}
+.tiny{font-size:clamp(10.5px,.94vw,13px)}
 strong{font-weight:700;color:var(--ink)}
-.mono{font-family:var(--mono);font-size:.92em}
+.mono{font-family:var(--mono);font-size:.9em}
 .accent{color:var(--accent)}.green{color:var(--green)}
-.lead{max-width:66ch}
+.lead{max-width:62ch}
+
+/* layout */
 .cols{display:grid;gap:2.4vw}
 .c2{grid-template-columns:1fr 1fr}
-.c2f{grid-template-columns:1.5fr 1fr}
+.c2f{grid-template-columns:1.52fr 1fr}
 .c3{grid-template-columns:repeat(3,1fr)}
 .c4{grid-template-columns:repeat(4,1fr)}
 ul.pts{list-style:none}
-ul.pts>li{position:relative;padding-left:1.35em;margin:.46em 0}
+ul.pts>li{position:relative;padding-left:1.35em;margin:.5em 0}
 ul.pts>li:before{content:"\\2014";position:absolute;left:0;color:var(--accent);font-family:var(--sans)}
 ol.num{list-style:none;counter-reset:c}
-ol.num>li{counter-increment:c;position:relative;padding-left:2.2em;margin:.55em 0}
+ol.num>li{counter-increment:c;position:relative;padding-left:2.2em;margin:.6em 0}
 ol.num>li:before{content:counter(c);position:absolute;left:0;top:.02em;width:1.45em;height:1.45em;
   border:1.5px solid var(--accent);color:var(--accent);border-radius:50%;display:grid;
   place-items:center;font-family:var(--sans);font-weight:700;font-size:.6em}
@@ -106,24 +113,50 @@ ol.num>li:before{content:counter(c);position:absolute;left:0;top:.02em;width:1.4
 table{width:100%;border-collapse:collapse;font-family:var(--sans)}
 th{text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
   color:var(--accent);border-bottom:1.5px solid var(--ink);padding:7px 10px;font-weight:700}
-td{font-family:var(--serif);font-size:clamp(11px,1.06vw,16px);color:var(--ink2);
+td{font-family:var(--serif);font-size:clamp(12px,1.1vw,16.5px);color:var(--ink2);
   border-bottom:1px solid var(--rule);padding:7px 10px}
 tr:last-child td{border-bottom:none}
-td.num{font-family:var(--mono);font-size:.92em}
+td.num{font-family:var(--mono);font-size:.9em}
+
+/* figures */
 .figwrap{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;margin:.4vh 0}
 .figwrap svg{max-width:100%;max-height:100%;width:auto;height:auto;
   border:1px solid var(--rule);background:#fff;padding:6px}
 .figwrap.big svg{max-height:70vh}
-.cap{flex:none;font-size:clamp(10.5px,1vw,13.5px);color:var(--ink3);margin-top:1vh;
+.cap{flex:none;font-size:clamp(11px,1vw,13.5px);color:var(--ink3);margin-top:1vh;
   text-align:center;font-family:var(--sans);line-height:1.45}
 .cap b{color:var(--ink)}
 .illus{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
-.eq{font-family:var(--serif);font-size:clamp(15px,1.8vw,25px);color:var(--ink);
+
+/* Figures settle into place, then their connectors are drawn in. Decorative
+   only, and suppressed for viewers who prefer reduced motion. Child selectors
+   keep <defs> markers out of it, so arrowheads never flicker. */
+@keyframes figSettle{from{opacity:0;transform:translateY(10px) scale(.994)}
+                     to{opacity:1;transform:none}}
+@keyframes inkIn{from{opacity:0}to{opacity:1}}
+.slide.active .figwrap svg{animation:figSettle .62s cubic-bezier(.2,.7,.2,1) both}
+.slide.active .figwrap svg>rect,
+.slide.active .figwrap svg>text,
+.slide.active .figwrap svg>g{animation:inkIn .48s ease .10s both}
+.slide.active .figwrap svg>path,
+.slide.active .figwrap svg>line,
+.slide.active .figwrap svg>polyline,
+.slide.active .figwrap svg>circle{animation:inkIn .55s ease .30s both}
+@media (prefers-reduced-motion:reduce){
+  .slide,.slide.active .figwrap svg,.slide.active .figwrap svg>*{
+    animation:none!important;transition:none!important}
+}
+
+/* maths */
+.eq{font-family:var(--serif);font-size:clamp(15px,1.75vw,24px);color:var(--ink);
   display:flex;align-items:center;gap:.3em;flex-wrap:wrap}
 .frac{display:inline-flex;flex-direction:column;text-align:center;margin:0 .12em}
 .frac .n{border-bottom:1.4px solid var(--ink);padding:0 .45em .04em}
 .frac .d{padding:.04em .45em 0}
-.eqlab{margin-left:auto;font-family:var(--sans);font-size:11px;color:var(--ink3)}
+.eqlab{margin-left:auto;font-family:var(--sans);font-size:11.5px;color:var(--ink3);
+  font-style:italic}
+
+/* dividers and title */
 .divider{background:var(--ink)}
 .divider .rh{color:#9a9aa4;border-color:#33333c}
 .divider .rh .sec{color:#c98b95}
@@ -138,9 +171,10 @@ td.num{font-family:var(--mono);font-size:.92em}
 .rule{width:84px;height:4px;background:var(--accent);margin:24px 0}
 .byline{margin-top:30px;font-size:13px;color:var(--ink2);line-height:1.7}
 .byline .af{color:var(--ink3);font-size:12px}
+
+/* chrome */
 .progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);z-index:20;
   transition:width .28s ease}
-/* per-slide dwell indicator, only advances while auto-play is running */
 .dwell{position:fixed;top:3px;left:0;height:2px;width:0;z-index:19;
   background:rgba(138,21,36,.32)}
 .chrome{position:fixed;bottom:12px;right:20px;z-index:20;font-family:var(--mono);
@@ -178,6 +212,7 @@ JS = """
   function go(i){cur=Math.max(0,Math.min(total-1,i));render();}
   const next=()=>{ if(cur<total-1) go(cur+1); else stop(); };
   const prev=()=>go(cur-1);
+
   // Dwell time per slide, in the 20-30s band: long enough to actually read a
   // slide unattended. Denser slides get longer.
   const DWELL={divider:20000, figure:30000, normal:25000};
@@ -202,8 +237,9 @@ JS = """
   function start(){auto=true;ab.textContent='Pause';ab.style.color='var(--accent)';sched();}
   function stop(){auto=false;ab.textContent='Auto';ab.style.color='';clearTimeout(timer);clearBar();}
   ab.onclick=()=>auto?stop():start();
-  function pause(){if(auto){clearTimeout(timer);clearTimeout(relaunch);
+  function pause(){if(auto){clearTimeout(timer);clearBar();clearTimeout(relaunch);
     relaunch=setTimeout(()=>{if(auto)sched();},6000);}}
+
   document.addEventListener('keydown',e=>{
     if(['ArrowRight',' ','PageDown'].includes(e.key)){e.preventDefault();pause();next();}
     else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();pause();prev();}
@@ -234,24 +270,6 @@ def rh(section: str) -> str:
 def slide(section: str, body: str, cls: str = "") -> str:
     return (f'<section class="slide {cls}">{rh(section)}'
             f'<div class="body">{body}</div></section>')
-
-
-def title_slide() -> str:
-    return ('<section class="slide title">'
-            '<div class="body">'
-            '<div class="kick">Multi-Agent Clinical Reasoning · Research Seminar</div>'
-            '<h1>MedJar: Consensus Diagnosis by Debating Specialist Agents</h1>'
-            '<div class="rule"></div>'
-            '<p class="sub lead">Persona-conditioned language-model specialists reason '
-            'independently over a patient case, ground every claim in retrieved '
-            'literature, and are driven toward a calibrated, auditable diagnosis '
-            'through structured debate.</p>'
-            '<div class="byline"><div><strong>MedJar Working Group</strong></div>'
-            '<div class="af">Clinical Machine Learning · Decision-Support Systems</div>'
-            '<div class="af" style="margin-top:9px">Technical report and working '
-            'prototype · assistive, human-in-the-loop · not an autonomous '
-            'diagnostic device</div></div>'
-            '</div></section>')
 
 
 def divider(num: str, title: str, sub: str, part: str) -> str:
@@ -290,471 +308,419 @@ def build() -> str:
     with open(TRACE, "r", encoding="utf-8") as f:
         tr = json.load(f)
     S = tr["summary"]
-    cases = {c["case_id"]: c for c in tr["cases"]}
 
     d: List[str] = []
-    d.append(title_slide())
 
-    # ---- motivation ----
+    # ---------------- title ----------------
+    d.append(
+        '<section class="slide title"><div class="body">'
+        '<div class="kick">Multi-Agent Clinical Reasoning · Research Prototype</div>'
+        '<h1>MedJar: Consensus Diagnosis by Debating Specialist Agents</h1>'
+        '<div class="rule"></div>'
+        '<p class="sub lead">Several AI specialists read the same patient case and '
+        'argue about it. Each must back its claims with a citation. If they cannot '
+        'agree, or something dangerous appears, the case goes to a doctor.</p>'
+        '<div class="byline"><div><strong>MedJar Working Group</strong></div>'
+        '<div class="af" style="margin-top:9px">Assistive only — not an autonomous '
+        'diagnostic device</div></div>'
+        '</div></section>')
+
+    # ---------------- motivation ----------------
     d.append(slide("Motivation", (
-        '<h2>Diagnostic error is a systems problem</h2>'
-        '<p class="lead" style="margin:.5em 0 1em">An estimated <strong>5% of '
-        'adults</strong> experience a diagnostic error in outpatient care each year, '
-        'concentrated in complex presentations that cross specialty boundaries.</p>'
+        '<h2>Why hard cases go wrong</h2>'
+        '<p class="lead" style="margin:.5em 0 1em">About <strong>1 in 20</strong> '
+        'adults gets a wrong or delayed diagnosis each year. It happens most in cases '
+        'that cross specialties.</p>'
         '<div class="cols c2">'
         '<ul class="pts">'
-        '<li><strong>Anchoring</strong> — an initial impression suppresses competing '
-        'hypotheses.</li>'
-        '<li><strong>Premature closure</strong> — the search ends once a plausible '
-        'answer appears.</li></ul>'
+        '<li><strong>The first idea sticks.</strong> Later evidence gets bent to fit '
+        'it.</li>'
+        '<li><strong>The search stops early.</strong> One plausible answer ends the '
+        'thinking.</li></ul>'
         '<ul class="pts">'
-        '<li><strong>Specialty siloing</strong> — the experts who would resolve the '
-        'case never reason on it together.</li>'
-        '<li><strong>Knowledge drift</strong> — guidelines change faster than anyone '
-        'tracks them.</li></ul></div>'
-        '<p class="lead sub" style="margin-top:1.3em">Medicine already has a '
-        'countermeasure — the tumour board. What makes it work is not consensus but '
-        '<strong>structured disagreement</strong>. Can that be made computational?</p>'
+        '<li><strong>Experts sit in silos.</strong> The people who could settle it '
+        'never meet on the case.</li>'
+        '<li><strong>Guidelines move.</strong> Nobody can keep up with all of '
+        'them.</li></ul></div>'
+        '<p class="lead sub" style="margin-top:1.3em">Hospitals already have a fix: '
+        'the tumour board. What makes it work is <strong>disagreement</strong>, not '
+        'agreement.</p>'
     )))
 
     d.append(slide("Motivation", (
-        '<h2>Why a single model is insufficient</h2>'
-        '<p class="lead" style="margin:.4em 0 1.1em">Conditioning one model on '
-        '<em>“you are an expert physician”</em> collapses the diversity of clinical '
-        'reasoning into a single distribution.</p>'
+        '<h2>Why one AI is not enough</h2>'
+        '<p class="lead" style="margin:.4em 0 1.1em">Telling a single model '
+        '<em>“you are an expert doctor”</em> buys you one point of view.</p>'
         '<div class="cols c3">'
-        '<div class="block al"><h3>Correlated failure</h3><p class="small">One prior, '
-        'one blind spot. No internal adversary to surface the missed diagnosis.</p></div>'
-        '<div class="block al"><h3>Miscalibrated confidence</h3><p class="small">'
-        'Self-consistent but wrong trajectories, asserted at high confidence.</p></div>'
-        '<div class="block al"><h3>Unverifiable grounding</h3><p class="small">Claims '
-        'not bound to a source cannot be checked, audited, or contested.</p></div></div>'
-        '<p class="lead" style="margin-top:1.3em">Majority voting does not fix this: it '
-        'discards <em>why</em> agents differ and systematically <strong>silences the '
-        'minority can’t-miss diagnosis</strong> — the most consequential error mode in '
-        'acute care.</p>'
+        '<div class="block al"><h3>One blind spot</h3><p class="small">One set of '
+        'instincts. Nothing inside it argues back.</p></div>'
+        '<div class="block al"><h3>Confident either way</h3><p class="small">It sounds '
+        'equally sure when it is right and when it is wrong.</p></div>'
+        '<div class="block al"><h3>Nothing to check</h3><p class="small">Its claims are '
+        'not tied to a source you can look up.</p></div></div>'
+        '<p class="lead" style="margin-top:1.3em">Simple voting does not fix it '
+        'either. Voting hides <em>why</em> they disagree, and it outvotes the one '
+        'agent that spotted something dangerous.</p>'
     )))
 
     d.append(slide("Contributions", (
-        '<h2>Contributions</h2>'
+        '<h2>What is new here</h2>'
         '<ol class="num" style="margin-top:.6em">'
-        '<li><strong>Specialist multi-agent formulation.</strong> Distinct reasoning '
-        'priors with <em>private, specialty-scoped</em> retrieval, so the diversity '
-        'debate consumes is preserved rather than averaged away.</li>'
-        '<li><strong>A structured debate protocol</strong> operating on grounded '
-        'reasons, converting disagreement into targeted retrieval.</li>'
-        '<li><strong>A consensus formalism</strong> — confidence-weighted aggregation, '
-        'evidence adjustment, and a disagreement metric driving an explicit stopping '
-        'and escalation rule.</li>'
-        '<li><strong>A competence-scoped critique rule</strong> which we show is '
-        '<em>necessary</em>: without it, agents lacking domain priors vote down correct '
-        'in-domain diagnoses.</li>'
-        '<li><strong>A complete deterministic prototype</strong> and an evaluation '
-        'protocol for the system as decision support — with negative results '
-        'reported.</li></ol>'
+        '<li><strong>Specialists that really differ.</strong> Each has its own '
+        'instincts and searches its own library.</li>'
+        '<li><strong>A debate with rules.</strong> Propose, criticise, reply, then '
+        'check whether they agree.</li>'
+        '<li><strong>A fair way to combine scores.</strong> Weight each agent by its '
+        'confidence and by how much it knows about that disease.</li>'
+        '<li><strong>Only experts may object.</strong> An agent cannot argue down a '
+        'diagnosis outside its field. We show this is essential.</li>'
+        '<li><strong>A working prototype</strong> — and an honest account of what did '
+        'not work.</li></ol>'
     )))
 
-    # ---- Part I ----
-    d.append(divider("I", "System", "Architecture, the case representation, and the "
-                     "end-to-end workflow.", "Part I"))
-    d.append(figure_slide("System · Architecture", "Six layers, one control loop",
-                          "arch",
-                          "<b>Figure 1.</b> Stages 0–2 are deterministic "
-                          "preprocessing; stage 3 hosts the debate and is the only "
-                          "stochastic component; stages 4–5 are deterministic "
-                          "aggregation and reporting."))
-    d.append(figure_slide("System · Workflow", "The complete workflow, end to end",
-                          "flow",
-                          "<b>Figure 2.</b> Steps 1–16 across eight lanes. "
-                          "De-identification happens in the intake lane — nothing "
-                          "below the boundary carries an identifier. Agents retrieve "
-                          "privately and never observe one another during proposal. "
-                          "The debate loop (10–12) repeats while D̄ > τ_agree and "
-                          "r &lt; R_max. Both dispositions end in clinician sign-off.",
-                          big=True))
-    d.append(figure_split("System · Representation", "Everything normalises into the CCO",
-                          "cco",
-                          "<b>Figure 3.</b> Six modalities, coded against ICD-10, "
-                          "SNOMED CT, LOINC and RxNorm.",
-                          ["One shared, coded representation for every agent.",
-                           "De-identification at the boundary; <strong>raw pixels "
-                           "never leave the enclave</strong>.",
-                           "Explicit <strong>negations</strong> are carried, so agents "
-                           "can distinguish <em>absent</em> from <em>not assessed</em> "
-                           "— a distinction routinely lost when notes are flattened.",
-                           "Swapping an encoder changes nothing downstream."]))
+    # ---------------- Part I ----------------
+    d.append(divider("I", "System", "How a case moves through it.", "Part I"))
 
-    # ---- Part II ----
-    d.append(divider("II", "Method", "Grounding, the debate protocol, and the "
-                     "consensus formalism.", "Part II"))
-    d.append(figure_slide("Method · Grounding", "Hybrid retrieval, then a hard "
-                          "grounding gate", "rag",
-                          "<b>Figure 4.</b> Dense recall and BM25 exact-term matching "
-                          "are merged by reciprocal rank fusion, re-ranked for "
-                          "precision, then gated: a claim not entailed by its cited "
-                          "passage is excluded from aggregation."))
+    d.append(figure_slide("System · Architecture", "Six layers, one loop", "arch",
+                          "<b>Figure 1.</b> Data flows downward. Steps 0–2 just "
+                          "prepare the case. The debate happens at step 3. Steps 4–5 "
+                          "score it and write the report."))
+
+    d.append(figure_slide("System · Workflow", "The whole thing, end to end", "flow",
+                          "<b>Figure 2.</b> All 16 steps. Names are stripped in the "
+                          "intake lane, so nothing below that line can identify a "
+                          "patient. Steps 10–12 repeat until the agents agree or time "
+                          "runs out. Every route ends with a doctor signing off.",
+                          big=True))
+
+    d.append(figure_split("System · Case file", "One shared case file", "cco",
+                          "<b>Figure 3.</b> Six kinds of input, all mapped to standard "
+                          "medical codes.",
+                          ["Every agent reads the same file.",
+                           "Names are removed first, and scan images never leave the "
+                           "hospital.",
+                           "It records what was <em>ruled out</em>, not just what was "
+                           "found.",
+                           "Swap an input reader and nothing downstream changes."]))
+
+    # ---------------- Part II ----------------
+    d.append(divider("II", "Method", "Sources, the debate, and the score.", "Part II"))
+
+    d.append(figure_slide("Method · Sources", "Every claim needs a source", "rag",
+                          "<b>Figure 4.</b> Two searches run at once — one by meaning, "
+                          "one by exact wording — and the results are merged. If the "
+                          "cited passage does not actually support the claim, the claim "
+                          "is thrown away before it can count."))
 
     d.append(slide("Method · Agents", (
-        '<h2>The specialist ensemble</h2>'
-        '<p class="lead" style="margin:.4em 0 .9em">Each agent is a triple '
-        '<span class="mono">⟨persona, tools, retrieval scope⟩</span>. Scoped retrieval '
-        'keeps perspectives distinct — global retrieval would homogenise the ensemble.</p>'
-        '<table><thead><tr><th>Agent</th><th>Reasoning prior</th>'
-        '<th>Characteristic question</th></tr></thead><tbody>'
-        '<tr><td><strong>Radiologist</strong></td><td>morphology → localisation → '
-        'imaging differential</td><td class="sub">What does the image show, independent '
-        'of the referral question?</td></tr>'
-        '<tr><td><strong>Cardiologist</strong></td><td>exclude life-threatening cardiac '
-        'aetiology first</td><td class="sub">Is there a cardiac cause or consequence we '
-        'must not miss?</td></tr>'
-        '<tr><td><strong>Oncologist</strong></td><td>tissue of origin, staging, '
-        'biomarkers</td><td class="sub">Is this neoplastic, and what is the '
-        'stage-defining evidence?</td></tr>'
-        '<tr><td><strong>Generalist</strong></td><td>whole-patient coherence</td>'
-        '<td class="sub">Does this explain the entire presentation?</td></tr>'
+        '<h2>The four specialists</h2>'
+        '<p class="lead" style="margin:.4em 0 .9em">Each has its own instincts and its '
+        'own reading list.</p>'
+        '<table><thead><tr><th>Agent</th><th>Looks at first</th>'
+        '<th>Its question</th></tr></thead><tbody>'
+        '<tr><td><strong>Radiologist</strong></td><td>the shape and place of what is '
+        'on the scan</td><td class="sub">What does the image actually show?</td></tr>'
+        '<tr><td><strong>Cardiologist</strong></td><td>anything about the heart that '
+        'could kill today</td><td class="sub">Is the heart the cause, or a '
+        'casualty?</td></tr>'
+        '<tr><td><strong>Oncologist</strong></td><td>whether it is cancer, and how far '
+        'it has spread</td><td class="sub">What proves the stage?</td></tr>'
+        '<tr><td><strong>Generalist</strong></td><td>the whole patient</td>'
+        '<td class="sub">Does this explain everything?</td></tr>'
         '</tbody></table>'
         '<div class="block al" style="margin-top:1.2em"><p class="small">'
-        '<strong>Reasoning contract.</strong> Every turn returns structured output — '
-        'per-hypothesis likelihood, supporting and refuting claims bound to citation '
-        'ids, the discriminating test, red flags, confidence — never free prose. '
-        '<strong>Agents never abstain:</strong> an agent with no prior for a hypothesis '
-        'registers a low cautionary floor, which counts in S(h) but not in D̄.</p></div>'
+        'Each turn comes back as a filled-in form, not an essay. It gives the '
+        'disease, a probability, evidence for and against, and the next test. '
+        '<strong>Nobody stays silent</strong> — an agent outside its field gives a low '
+        '“not my area” score, which counts for less.</p></div>'
     )))
 
-    d.append(figure_slide("Method · Debate", "Propose → critique → rebut → assess",
-                          "seq",
-                          "<b>Figure 5.</b> Proposal is isolated to prevent anchoring; "
-                          "critique is anonymised; contested points seed targeted "
-                          "re-retrieval. At least one critique round always runs — "
-                          "coinciding impressions are still cross-examined. Labels "
-                          "abridged from the prototype’s CASE-001 transcript."))
+    d.append(figure_slide("Method · Debate", "Propose, criticise, reply, check", "seq",
+                          "<b>Figure 5.</b> Each agent writes its first answer alone, "
+                          "so nobody copies anybody. Then they criticise each other "
+                          "anonymously and reply. One round of criticism always happens, "
+                          "even when they already agree."))
 
-    d.append(slide("Method · Consensus", (
-        '<h2>Consensus formalism</h2>'
+    d.append(slide("Method · Score", (
+        '<h2>How the scores are combined</h2>'
         '<div style="margin:.5em 0 1em">'
         '<div class="eq">S(h) = <span class="frac"><span class="n">Σᵢ wᵢ(h)·cᵢ·pᵢ(h)'
         '</span><span class="d">Σᵢ wᵢ(h)·cᵢ</span></span>'
-        '<span class="eqlab">(1) confidence- and competence-weighted mean</span></div>'
+        '<span class="eqlab">(1) a weighted average of the agents’ scores</span></div>'
         '</div>'
         '<div style="margin:.9em 0">'
         '<div class="eq">S*(h) = σ( α·logit S(h) + β·E(h) )'
-        '<span class="eqlab">(2) evidence adjustment</span></div></div>'
+        '<span class="eqlab">(2) adjust for how good the evidence is</span></div></div>'
         '<div style="margin:.9em 0">'
         '<div class="eq">Disagree(h) = <span class="frac">'
         '<span class="n">Σ<sub>i∈𝒮</sub> wᵢcᵢ( pᵢ(h) − S(h) )²</span>'
         '<span class="d">Σ<sub>i∈𝒮</sub> wᵢcᵢ</span></span>'
-        '<span class="eqlab">(3) weighted variance</span></div></div>'
+        '<span class="eqlab">(3) how far apart they are</span></div></div>'
         '<div class="cols c3" style="margin-top:1.1em">'
-        '<div class="block"><h3>wᵢ(h) — soft MoE</h3><p class="small">1.00 in-domain, '
-        '0.58–0.82 adjacent, 0.45 otherwise. Not a router: every agent votes on every '
-        'hypothesis.</p></div>'
-        '<div class="block"><h3>E(h) — evidence</h3><p class="small">Support minus '
-        'refutation, weighted by evidence grade, recency and entailment.</p></div>'
-        '<div class="block al"><h3>𝒮(h) — substantive only</h3><p class="small">Floors '
-        'are excluded from (3): absence of an opinion is not dissent.</p></div></div>'
+        '<div class="block"><h3>wᵢ — who to trust</h3><p class="small">The cardiologist '
+        'counts most on heart problems. Everyone still votes on everything.</p></div>'
+        '<div class="block"><h3>E — evidence quality</h3><p class="small">Support minus '
+        'contradiction, weighted by how strong and how recent the source is.</p></div>'
+        '<div class="block al"><h3>𝒮 — who has a real view</h3><p class="small">“Not my '
+        'field” answers are left out. Not knowing is not disagreeing.</p></div></div>'
     )))
 
-    d.append(figure_slide("Method · Consensus", "From agent opinions to S*(h) and D̄",
-                          "cons",
-                          "<b>Figure 6.</b> Values are the prototype’s actual round-0 "
-                          "likelihoods for <em>primary lung malignancy</em> in "
-                          "CASE-001. The cardiologist’s 0.17 is a cautionary floor, "
-                          "not a considered dissent."))
+    d.append(figure_slide("Method · Score", "From four opinions to one number", "cons",
+                          "<b>Figure 6.</b> Real numbers from CASE-001. The "
+                          "cardiologist’s 0.17 means “not my field”, not “I "
+                          "disagree” — so it is weighted down, and left out of the "
+                          "disagreement number."))
 
-    d.append(figure_split("Method · Control", "Deterministic orchestration", "fsm",
-                          "<b>Figure 7.</b> States and guards. τ_agree = 0.010, "
-                          "τ_flag = 0.30, R_max = 4, r_min = 1.",
-                          ["Control flow is a <strong>finite-state machine, not a "
-                           "model</strong> — predictable, testable, auditable.",
-                           "<strong>Converge:</strong> D̄ ≤ τ_agree → aggregate and "
-                           "report.",
-                           "<strong>Budget:</strong> r = R_max → escalate with the open "
-                           "disagreement stated.",
-                           "<strong>Can’t-miss:</strong> any red-flag dx with S* ≥ "
-                           "τ_flag → escalate, overriding consensus.",
-                           "The override is <strong>asymmetric</strong>: it can force "
-                           "escalation, never suppress it."]))
+    d.append(figure_split("Method · Control", "Who runs the meeting", "fsm",
+                          "<b>Figure 7.</b> The states, and the rules for moving "
+                          "between them.",
+                          ["A fixed program runs the meeting, not a model.",
+                           "<strong>They agree</strong> → write the report.",
+                           "<strong>Time runs out</strong> → send it to a doctor.",
+                           "<strong>Something dangerous scores high</strong> → send it "
+                           "to a doctor, whatever the others think."]))
 
-    d.append(figure_split("Method · Output", "The report leads with uncertainty",
+    d.append(figure_split("Method · Output", "The report starts with the doubts",
                           "report",
-                          "<b>Figure 8.</b> Status, can’t-miss panel and disagreement "
-                          "precede the differential.",
-                          ["Ordering is a <strong>safety decision</strong>, not a "
-                           "stylistic one.",
-                           "The clinically valuable content is what the system is "
-                           "<em>unsure</em> about.",
-                           "Points of disagreement are surfaced, never suppressed — "
-                           "they mark where judgement is needed.",
-                           "Every claim carries a citation into the Evidence Ledger; "
-                           "the debate is replayable."]))
+                          "<b>Figure 8.</b> Status, dangers and disagreements come "
+                          "before the list of diagnoses.",
+                          ["Putting doubt first is a safety choice, not a style one.",
+                           "What the system is unsure about is the useful part.",
+                           "Disagreements are shown, never hidden.",
+                           "Every claim links back to the passage it came from."]))
 
-    d.append(figure_slide("Method · Deployment", "Trust boundaries", "deploy",
-                          "<b>Figure 9.</b> Identifiers and raw pixels stay in the PHI "
-                          "enclave; the reasoning zone sees only the de-identified CCO; "
-                          "re-identification happens solely at the point of care, "
-                          "through a restricted token service, and is logged."))
+    d.append(figure_slide("System · Privacy", "Where the patient data lives", "deploy",
+                          "<b>Figure 9.</b> Names and scan images stay inside the "
+                          "hospital. The reasoning side only ever sees the anonymous "
+                          "case. Names are added back just for the doctor, and every "
+                          "access is logged."))
 
-    # ---- Part III ----
+    # ---------------- Part III ----------------
     d.append(divider("III", "Prototype &amp; results",
-                     "What was built, what it does, and what broke.", "Part III"))
+                     "What was built, and what broke.", "Part III"))
 
     d.append(slide("Prototype", (
-        '<h2>A complete, dependency-free implementation</h2>'
-        '<div class="cols c2" style="margin-top:.5em">'
-        '<div><table><thead><tr><th>Module</th><th>Responsibility</th></tr></thead>'
-        '<tbody>'
-        '<tr><td class="mono">schemas.py</td><td>CCO, hypotheses, claims, ledger</td></tr>'
-        '<tr><td class="mono">corpus.py</td><td>24-passage graded corpus</td></tr>'
-        '<tr><td class="mono">retrieval.py</td><td>BM25 + dense + RRF + re-rank</td></tr>'
-        '<tr><td class="mono">verify.py</td><td>groundedness gate</td></tr>'
-        '<tr><td class="mono">agents.py</td><td>personas, competence-scoped critique</td></tr>'
-        '<tr><td class="mono">consensus.py</td><td>Eqs. (1)–(3), ECE / Brier</td></tr>'
-        '<tr><td class="mono">debate.py</td><td>Chief-of-Service FSM</td></tr>'
-        '<tr><td class="mono">report.py</td><td>report + transcript renderers</td></tr>'
+        '<h2>It runs, with nothing to install</h2>'
+        '<div class="cols c2f" style="margin-top:.5em">'
+        '<div><table><thead><tr><th>File</th><th>Job</th></tr></thead><tbody>'
+        '<tr><td class="mono">corpus.py</td><td>the medical library</td></tr>'
+        '<tr><td class="mono">retrieval.py</td><td>finds relevant passages</td></tr>'
+        '<tr><td class="mono">verify.py</td><td>checks a claim against its source</td></tr>'
+        '<tr><td class="mono">agents.py</td><td>the four specialists</td></tr>'
+        '<tr><td class="mono">consensus.py</td><td>the three equations</td></tr>'
+        '<tr><td class="mono">debate.py</td><td>runs the meeting</td></tr>'
+        '<tr><td class="mono">report.py</td><td>writes the report</td></tr>'
         '</tbody></table></div>'
         '<div><ul class="pts">'
-        '<li><strong>No third-party dependencies</strong>, fully deterministic — the '
-        'debate and consensus mathematics can be verified without a model in the '
-        'loop.</li>'
-        '<li>Two interchangeable reasoning back-ends: <span class="mono">'
-        'RuleBasedEngine</span> (offline, reproducible) and <span class="mono">LLMEngine'
-        '</span> (production path). Swapping them changes nothing else.</li>'
-        '<li>Result figures are computed from the run trace, so the numbers and the '
-        'plots cannot drift apart.</li></ul>'
+        '<li>Python only, <strong>no libraries</strong>.</li>'
+        '<li>Same answer every time, so the maths can be checked without a model in '
+        'the loop.</li>'
+        '<li>Two engines you can swap: offline rules, or real LLMs.</li>'
+        '<li>The charts are built from the run itself, so numbers and pictures cannot '
+        'drift apart.</li></ul>'
         '<div class="block gl" style="margin-top:1em"><p class="small mono">'
-        'cd prototype  &amp;&amp; python3 run_demo.py<br>'
-        'cd ../figures &amp;&amp; python3 make_figures.py<br>'
-        '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
-        '&nbsp;&nbsp;python3 check_layout.py</p></div>'
+        'python3 run_demo.py<br>python3 make_figures.py</p></div>'
         '</div></div>'
     )))
 
-    c1, c2, c3 = cases["CASE-001"], cases["CASE-002"], cases["CASE-003"]
-
-    def traj(c: Dict) -> str:
-        return " → ".join(f"{r['D_bar']:.4f}" for r in c["rounds"])
-
     d.append(slide("Results", (
-        '<h2>What the prototype does</h2>'
+        '<h2>What it does on three cases</h2>'
         '<div class="cols c2f" style="margin-top:.5em">'
-        '<div><table><thead><tr><th>Case</th><th>Reference dx</th><th>Lead S*</th>'
-        '<th>Rounds</th><th>Disposition</th></tr></thead><tbody>'
-        f'<tr><td class="mono">CASE-001</td><td>Primary lung malignancy</td>'
-        f'<td class="num">0.79 ✓</td><td class="num">4</td>'
-        f'<td class="accent"><strong>escalated</strong> — can’t-miss</td></tr>'
-        f'<tr><td class="mono">CASE-002</td><td>Benign granuloma</td>'
-        f'<td class="num">0.59 ✓</td><td class="num">2</td>'
-        f'<td class="green"><strong>converged</strong></td></tr>'
-        f'<tr><td class="mono">CASE-003</td><td>Acute coronary syndrome</td>'
-        f'<td class="num">0.55 ✓</td><td class="num">1</td>'
-        f'<td class="accent"><strong>escalated</strong> — can’t-miss</td></tr>'
+        '<div><table><thead><tr><th>Case</th><th>Right answer</th><th>Score</th>'
+        '<th>Rounds</th><th>Outcome</th></tr></thead><tbody>'
+        '<tr><td class="mono">CASE-001</td><td>Lung cancer</td>'
+        '<td class="num">0.79 ✓</td><td class="num">4</td>'
+        '<td class="accent"><strong>sent to a doctor</strong></td></tr>'
+        '<tr><td class="mono">CASE-002</td><td>Harmless nodule</td>'
+        '<td class="num">0.59 ✓</td><td class="num">2</td>'
+        '<td class="green"><strong>agreed</strong></td></tr>'
+        '<tr><td class="mono">CASE-003</td><td>Heart attack</td>'
+        '<td class="num">0.55 ✓</td><td class="num">1</td>'
+        '<td class="accent"><strong>sent to a doctor</strong></td></tr>'
         '</tbody></table>'
-        '<p class="small sub" style="margin-top:.8em">The three cases exercise all '
-        'three stopping paths.</p></div>'
-        '<div><table><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody>'
-        f'<tr><td>Top-1 / Top-3</td><td class="num">3/3 · 3/3</td></tr>'
-        f'<tr><td>Claims passing grounding gate</td><td class="num">130 / 130</td></tr>'
-        f'<tr><td>Ledger citations</td><td class="num">91</td></tr>'
-        f'<tr><td>ECE</td><td class="num accent">{S["ece"]:.3f}</td></tr>'
-        f'<tr><td>Brier</td><td class="num">{S["brier"]:.3f}</td></tr>'
+        '<p class="small sub" style="margin-top:.8em">Between them, these three take '
+        'all three possible exits.</p></div>'
+        '<div><table><thead><tr><th>Measure</th><th>Value</th></tr></thead><tbody>'
+        '<tr><td>Top answer correct</td><td class="num">3 of 3</td></tr>'
+        '<tr><td>Claims backed by a source</td><td class="num">130 of 130</td></tr>'
+        '<tr><td>Citations recorded</td><td class="num">91</td></tr>'
+        f'<tr><td>Confidence error (ECE)</td><td class="num accent">{S["ece"]:.3f}</td></tr>'
         '</tbody></table>'
         '<div class="block al" style="margin-top:1em"><p class="small">'
-        '<strong>Three synthetic cases with a deterministic reasoner.</strong> This '
-        'validates <em>mechanism</em>, not diagnostic performance. The 3/3 hit rate '
-        'carries no clinical weight.</p></div></div></div>'
+        'Three <strong>made-up</strong> cases, offline engine. This shows the machinery '
+        'works. It says <strong>nothing</strong> about whether it can diagnose.</p>'
+        '</div></div></div>'
     )))
 
-    d.append(figure_split("Results", "Disagreement as a control signal", "conv",
+    d.append(figure_split("Results", "Disagreement decides what happens", "conv",
                           "<b>Figure 10.</b> Real run data.",
-                          [f"<strong>CASE-002</strong> falls below τ_agree "
-                           f"({traj(c2)}) and <span class='green'>converges</span>.",
-                           f"<strong>CASE-001</strong> plateaus above it ({traj(c1)}): "
-                           f"the specialists narrow but cannot reconcile, so the case "
-                           f"<span class='accent'>escalates with its open disagreement "
-                           f"stated</span>.",
-                           "<strong>CASE-003</strong> agrees almost immediately yet "
-                           "still escalates — a can’t-miss diagnosis overrides "
-                           "consensus.",
-                           "D̄ gives a principled, compute-bounded criterion for "
-                           "<em>“we are not sure — ask a human.”</em>"]))
+                          ["<strong>CASE-002</strong> — they converge, so the report "
+                           "goes out.",
+                           "<strong>CASE-001</strong> — they narrow the gap but never "
+                           "close it, so a doctor gets it.",
+                           "<strong>CASE-003</strong> — they agree quickly, yet a "
+                           "dangerous diagnosis still forces escalation.",
+                           "A clear rule for <em>“we are not sure — ask a human.”</em>"]))
 
-    d.append(figure_split("Results", "Why competence weighting matters", "diverge",
+    d.append(figure_split("Results", "Why “who knows what” matters", "diverge",
                           "<b>Figure 11.</b> CASE-001, final round. Real run data.",
-                          ["On the leading hypothesis the agents split "
-                           "<span class='mono'>0.83 / 0.17 / 0.90 / 0.79</span>.",
-                           "The cardiologist’s 0.17 is a <strong>cautionary floor</strong>, "
-                           "not a considered dissent — it has no oncology prior.",
-                           "Specialty weighting stops it dominating S*(h), and it is "
-                           "excluded from D̄ entirely.",
-                           "Without both rules, ignorance would masquerade as "
-                           "disagreement."]))
+                          ["On the top diagnosis the four agents said "
+                           "<span class='mono'>0.83, 0.17, 0.90, 0.79</span>.",
+                           "The 0.17 is the cardiologist saying “not my field”.",
+                           "Weighting stops it dragging the score down.",
+                           "And it is left out of the disagreement number "
+                           "altogether."]))
 
-    d.append(figure_split("Results", "Evidence adjustment does real work", "diff",
-                          "<b>Figure 12.</b> CASE-001 differential. Real run data.",
-                          ["The gap between S and S* is the contribution of grounded "
-                           "evidence.",
-                           "<em>Primary lung malignancy</em> <strong>gains</strong>: "
-                           "E = +0.72, S 0.72 → S* 0.79.",
-                           "<em>Malignant pericardial effusion</em> <strong>loses</strong>: "
-                           "E = −0.34, 0.37 → 0.33 — the retrieved guidance states "
-                           "cytological confirmation is required, so the corpus argues "
-                           "against asserting it.",
-                           "Plausibility and support are separated."]))
+    d.append(figure_split("Results", "Good evidence moves the score", "diff",
+                          "<b>Figure 12.</b> CASE-001. Real run data.",
+                          ["<strong>Lung cancer goes up</strong> — the sources back it "
+                           "(0.72 → 0.79).",
+                           "<strong>Cancer in the heart lining goes down</strong> — the "
+                           "guideline says you need a lab test first (0.37 → 0.33).",
+                           "So “sounds likely” and “is actually supported” are kept "
+                           "apart."]))
 
-    d.append(figure_split("Results", "Calibration: a negative result", "calib",
-                          "<b>Figure 13.</b> Real run data; small-sample, not a "
-                          "validation result.",
-                          [f"ECE = <strong class='accent'>{S['ece']:.3f}</strong> over "
-                           f"19 hypothesis-level predictions — <strong>poor</strong>.",
-                           "Temperatures and α, β are <strong>hand-set, not fitted</strong> "
-                           "on held-out data.",
-                           "Eq. (1) weights agents <em>by</em> their confidence, so this "
-                           "requirement is currently <strong>unmet</strong>.",
-                           "S* should be read <strong>ordinally</strong>, not as a "
-                           "probability. Fitting the calibration layer is the first "
-                           "prerequisite for any performance claim."]))
+    d.append(figure_split("Results", "What did not work: the confidence numbers",
+                          "calib",
+                          "<b>Figure 13.</b> Real run data, very small sample.",
+                          ["The confidence scores are <strong>badly calibrated</strong> "
+                           f"(ECE {S['ece']:.3f}).",
+                           "We set the weights by hand instead of fitting them to data.",
+                           "The maths weights agents <em>by</em> confidence, so this "
+                           "matters.",
+                           "Read the scores as a ranking, not as real probabilities."]))
 
-    # the key slide
+    # ---------------- failure modes, split over two slides ----------------
     d.append(slide("Findings", (
-        '<h2>Four failure modes the implementation exposed</h2>'
+        '<h2>What broke — and one of them was serious</h2>'
         '<div class="cols c2" style="margin-top:.4em">'
-        '<div class="block al"><h3>(a) Hypotheses floating on their prior</h3>'
-        '<p class="small">A diagnosis whose supporting features were <em>entirely '
-        'absent</em> still scored ≈0.33 on its prior intercept alone — putting lung '
-        'malignancy top of the differential for a patient with no nodule. '
-        '<strong>Fix:</strong> zero matched features ⇒ penalised out of contention.</p></div>'
-        '<div class="block al" style="border-left-width:5px"><h3 class="accent">'
-        '(b) Incompetent critique → false reassurance</h3>'
-        '<p class="small">Three agents with <strong>no cardiology competence</strong> '
-        'critiqued the cardiologist’s correct ACS position using their own ignorance '
-        'floor as the comparison. S* fell 0.84 → 0.27, below τ_flag, and the case '
-        '<strong>converged instead of escalating</strong> — manufacturing exactly the '
-        'false reassurance the system exists to prevent. <strong>Fix:</strong> the right '
-        'to object is tied to competence.</p></div>'
-        '<div class="block al"><h3>(c) Unbounded reinforcement → echo chamber</h3>'
-        '<p class="small">Uncontested positions inflated every round, so apparent '
-        'disagreement <em>drifted upward</em> — the opposite of the intended dynamic. '
-        '<strong>Fix:</strong> reinforcement capped at the agent’s own prior. '
-        'Consolidation may restore a position; it may not inflate it.</p></div>'
-        '<div class="block al"><h3>(d) Ignorance floors counted as dissent</h3>'
-        '<p class="small">Floors never move, so including them in Eq. (3) created '
-        'irreducible disagreement: the benign case exhausted its budget instead of '
-        'converging. <strong>Fix:</strong> restrict (3) to substantive opinions.</p></div>'
+        '<div class="block al"><h3>A diagnosis floating on a hunch</h3>'
+        '<p class="small">A disease with <em>no</em> supporting findings still scored '
+        '0.33, on its prior alone. It topped the list for a patient '
+        'with none of its signs.</p>'
+        '<p class="small" style="margin-top:.6em"><strong>Fix:</strong> no evidence, no '
+        'place on the list.</p></div>'
+        '<div class="block al" style="border-left-width:5px">'
+        '<h3 class="accent">Non-experts overruling the expert</h3>'
+        '<p class="small">Three agents with <strong>no heart training</strong> argued '
+        'the cardiologist out of a <strong>correct heart-attack diagnosis</strong>. The '
+        'score fell 0.84 → 0.27, below the alarm level, and the case '
+        '<strong>closed instead of escalating</strong>.</p>'
+        '<p class="small" style="margin-top:.6em"><strong>Fix:</strong> you may only '
+        'object in a field you actually know.</p></div>'
         '</div>'
-        '<p class="lead" style="margin-top:1.1em"><strong>Aggregation rules, not agent '
-        'count, determine whether an ensemble is safe.</strong> An unweighted debate '
-        'among heterogeneous agents can be <em>more</em> dangerous than one competent '
-        'agent — it gives confident non-experts a mechanism to overrule a correct '
-        'specialist.</p>'
+        '<p class="lead" style="margin-top:1.1em">That is exactly the false '
+        'reassurance the system exists to prevent.</p>'
     )))
 
-    d.append(figure_split("Evaluation", "The study this is not (yet)", "abl",
-                          "<b>Figure 14.</b> Expected effects — hypotheses to be "
-                          "tested, not measurements.",
-                          ["<strong>Data:</strong> knowledge probes; "
-                           "clinicopathological-conference cases; a prospective "
-                           "<strong>silent trial</strong>, read-only, never influencing "
-                           "care.",
-                           "<strong>Primary endpoint is safety, not accuracy:</strong> "
-                           "can’t-miss recall and the <strong>false-reassurance "
-                           "rate</strong>.",
-                           "Also: ECE / Brier, groundedness, blinded specialist "
-                           "ratings, rounds-to-converge, and subgroup parity.",
-                           "<strong>Ablations:</strong> single agent · majority vote · "
-                           "debate without RAG · without calibration · full system."]))
+    d.append(slide("Findings", (
+        '<h2>What broke — the other two</h2>'
+        '<div class="cols c2" style="margin-top:.4em">'
+        '<div class="block al"><h3>An echo chamber</h3>'
+        '<p class="small">Agents kept boosting their own unchallenged answers every '
+        'round, so disagreement <em>grew</em> instead of shrinking — the opposite of '
+        'what should happen.</p>'
+        '<p class="small" style="margin-top:.6em"><strong>Fix:</strong> confidence may '
+        'recover to where it started, never above.</p></div>'
+        '<div class="block al"><h3>Silence counted as dissent</h3>'
+        '<p class="small">“Not my field” answers were counted as disagreement. They '
+        'never change, so the argument could never end. A simple case ran out of time '
+        'instead of agreeing.</p>'
+        '<p class="small" style="margin-top:.6em"><strong>Fix:</strong> leave those '
+        'answers out of the disagreement number.</p></div>'
+        '</div>'
+        '<p class="lead" style="margin-top:1.1em"><strong>The rules for combining '
+        'opinions matter more than the number of agents.</strong> Without them, a '
+        'debate can be worse than one good doctor.</p>'
+    )))
+
+    d.append(figure_split("Evaluation", "What we have not done yet", "abl",
+                          "<b>Figure 14.</b> Expected effects — a plan, not results.",
+                          ["Test on real recorded cases, then run quietly alongside "
+                           "real doctors.",
+                           "The main measure is <strong>safety</strong>: how often it "
+                           "wrongly says nothing is dangerous.",
+                           "Compare one agent, plain voting, debate without sources, "
+                           "and the full system.",
+                           "Only then can accuracy be claimed."]))
 
     d.append(slide("Safety", (
-        '<h2>Assistive by design — the clinician decides</h2>'
+        '<h2>The doctor decides</h2>'
         '<div class="cols c2" style="margin-top:.5em">'
-        '<div><div class="block gl"><h3>Human gate</h3><p class="small">Mandatory '
-        'sign-off before any recommendation informs care. Uncertainty and can’t-miss '
-        'findings <strong>escalate rather than close</strong> a case.</p></div>'
+        '<div><div class="block gl"><h3>A human always signs off</h3>'
+        '<p class="small">Nothing reaches patient care unread. When the system is '
+        'unsure, it escalates instead of closing the case.</p></div>'
         '<div class="block" style="margin-top:14px"><h3>Privacy</h3><p class="small">'
-        'De-identification at intake · PHI enclave · encryption · per-access audit · no '
-        'training on patient data absent governance and consent.</p></div></div>'
-        '<div><div class="block"><h3>Regulatory</h3><p class="small">Decision support '
-        'driving diagnosis is likely <strong>Software as a Medical Device</strong>. '
-        'Transparent evidence and a replayable transcript support the “clinician can '
-        'independently review the basis” pathway — but deployment needs clinical '
-        'validation, a predetermined change-control plan, and post-market '
-        'surveillance.</p></div>'
-        '<div class="block" style="margin-top:14px"><h3>Equity</h3><p class="small">'
-        'Corpus and evaluation stratified by subgroup, calibration checked per stratum '
-        'and monitored continuously.</p></div></div></div>'
-        '<p class="sub" style="margin-top:1.2em">MedJar does not autonomously diagnose '
-        'or treat, and is not a substitute for professional medical judgement.</p>'
+        'Names removed at intake, held in a locked zone, every access logged.</p></div></div>'
+        '<div><div class="block"><h3>It counts as a medical device</h3>'
+        '<p class="small">Showing the evidence and the argument is what lets a doctor '
+        'check the reasoning. Real use would still need clinical trials and '
+        'monitoring.</p></div>'
+        '<div class="block" style="margin-top:14px"><h3>Fairness</h3><p class="small">'
+        'Accuracy and confidence have to be checked separately for each patient '
+        'group.</p></div></div></div>'
+        '<p class="sub" style="margin-top:1.2em">MedJar does not diagnose or treat on '
+        'its own, and is not a substitute for a doctor.</p>'
     )))
 
     d.append(slide("Limitations", (
-        '<h2>Limitations and threats to validity</h2>'
+        '<h2>What to hold against it</h2>'
         '<table style="margin-top:.4em"><thead><tr><th>Limitation</th>'
-        '<th>Consequence</th></tr></thead><tbody>'
-        '<tr><td><strong>Three synthetic cases, rule-based reasoner</strong></td>'
-        '<td>Validates mechanism only. No LLM in the loop, no real data, no clinician '
-        'review.</td></tr>'
-        '<tr><td><strong>Calibration unmet</strong> (ECE 0.243)</td>'
-        '<td>Confidence-weighted aggregation is only sound once cᵢ is fitted.</td></tr>'
-        '<tr><td><strong>Surrogate components</strong></td>'
-        '<td>Hashed bag-of-words for embeddings, lexical coverage for entailment — each '
-        'would change absolute numbers.</td></tr>'
-        '<tr><td><strong>Crude polarity classification</strong></td>'
-        '<td>ACS received E = −0.41 because passages <em>defining</em> its criteria '
-        'contain cautionary language. Needs a trained stance classifier.</td></tr>'
-        '<tr><td><strong>Correlated agent failure</strong></td>'
-        '<td>Shared base models may share blind spots, weakening the diversity the '
-        'protocol depends on.</td></tr>'
-        '<tr><td><strong>Automation bias</strong></td>'
-        '<td>Leading with uncertainty is intended to counter over-trust; whether it '
-        'does is a human-factors question.</td></tr>'
+        '<th>Why it matters</th></tr></thead><tbody>'
+        '<tr><td><strong>Three made-up cases</strong></td>'
+        '<td>Shows the machinery runs. Says nothing about diagnosing.</td></tr>'
+        '<tr><td><strong>No real model in the loop</strong></td>'
+        '<td>The reported results use hand-written rules, not an LLM.</td></tr>'
+        '<tr><td><strong>Confidence not calibrated</strong></td>'
+        '<td>The weighting is only sound once it is fitted to data.</td></tr>'
+        '<tr><td><strong>Stand-in components</strong></td>'
+        '<td>Search and claim-checking are simple substitutes. Real ones change the '
+        'numbers.</td></tr>'
+        '<tr><td><strong>“For” vs “against” is crude</strong></td>'
+        '<td>A passage defining a disease often reads as arguing against it.</td></tr>'
+        '<tr><td><strong>Shared blind spots</strong></td>'
+        '<td>Agents on the same base model may fail the same way.</td></tr>'
+        '<tr><td><strong>Tiny library</strong></td>'
+        '<td>24 passages. Real use needs licensed, maintained guidelines.</td></tr>'
         '</tbody></table>'
     )))
 
     d.append(slide("Conclusion", (
         '<h2>Conclusion</h2>'
-        '<p class="lead" style="margin:.5em 0 1.1em">MedJar recasts the '
-        'multidisciplinary case conference as a computational protocol: specialists '
-        'reason independently, ground every claim, debate under rules that tie the '
-        'right to object to competence, and converge on a calibrated, auditable '
-        'assessment — <strong>escalating to a human precisely when they should</strong>.</p>'
+        '<p class="lead" style="margin:.5em 0 1.1em">MedJar turns the hospital case '
+        'conference into a program. Specialists think alone, cite their sources, argue '
+        'under rules, and hand the case to a doctor when they should.</p>'
         '<div class="cols c3">'
-        '<div class="block gl"><h3>Demonstrated</h3><p class="small">The full pipeline '
-        'runs end to end, deterministically, and D̄ works as a control signal across '
-        'all three stopping paths.</p></div>'
-        '<div class="block al"><h3>The transferable result</h3><p class="small">Naive '
-        'multi-agent debate is <strong>not automatically safer</strong>. We watched a '
-        'correct can’t-miss diagnosis suppressed by agents with no competence in the '
-        'domain.</p></div>'
-        '<div class="block"><h3>Next</h3><p class="small">Fit the calibration layer; '
-        'then a prospective silent trial — the only way to learn whether any of this '
-        'helps a clinician.</p></div></div>'
-        '<p class="lead" style="margin-top:1.3em;text-align:center"><strong>Aggregation '
-        'rules, not agent count, determine whether an ensemble is safe.</strong></p>'
+        '<div class="block gl"><h3>It works</h3><p class="small">The pipeline runs end '
+        'to end, and the disagreement number reliably picks the right exit.</p></div>'
+        '<div class="block al"><h3>The warning</h3><p class="small">More agents is not '
+        'automatically safer. We watched non-experts talk down a correct dangerous '
+        'diagnosis.</p></div>'
+        '<div class="block"><h3>Next</h3><p class="small">Fit the confidence numbers, '
+        'then trial it quietly beside real doctors.</p></div></div>'
+        '<p class="lead" style="margin-top:1.3em;text-align:center"><strong>The rules '
+        'for combining opinions decide whether an ensemble is safe.</strong></p>'
     )))
 
     d.append(slide("References", (
         '<h2>Selected references</h2>'
         '<div class="cols c2" style="margin-top:.5em">'
-        '<ul class="pts tiny" style="list-style:none">'
+        '<ul class="pts tiny">'
         '<li>[1] National Academies. <em>Improving Diagnosis in Health Care.</em> 2015.</li>'
-        '<li>[2] Du et al. Improving factuality and reasoning through multiagent '
-        'debate. 2023.</li>'
-        '<li>[3] Madaan et al. Self-Refine: iterative refinement with self-feedback. '
-        'NeurIPS 2023.</li>'
-        '<li>[4] Lewis et al. Retrieval-augmented generation for knowledge-intensive '
-        'NLP. NeurIPS 2020.</li>'
+        '<li>[2] Du et al. Multiagent debate improves factuality. 2023.</li>'
+        '<li>[3] Madaan et al. Self-Refine. NeurIPS 2023.</li>'
+        '<li>[4] Lewis et al. Retrieval-augmented generation. NeurIPS 2020.</li>'
         '<li>[5] Cormack et al. Reciprocal rank fusion. SIGIR 2009.</li></ul>'
-        '<ul class="pts tiny" style="list-style:none">'
-        '<li>[6] Jin et al. MedQA / USMLE-style medical QA. 2021.</li>'
+        '<ul class="pts tiny">'
+        '<li>[6] Jin et al. MedQA. 2021.</li>'
         '<li>[7] Pal et al. MedMCQA. CHIL 2022.</li>'
-        '<li>[8] Singhal et al. Large language models encode clinical knowledge. '
-        'Nature 2023.</li>'
-        '<li>[9] Guo et al. On calibration of modern neural networks. ICML 2017.</li>'
-        '<li>[10] U.S. FDA. Clinical Decision Support Software guidance; GMLP '
-        'principles.</li></ul></div>'
-        '<p class="illus" style="margin-top:1.2em">Citations are provided at the level '
-        'of identification; verify against primary sources before publication.</p>'
-        '<p class="sub" style="margin-top:1.4em;text-align:center">MedJar · Consensus '
-        'Diagnosis by Debating Specialist Agents · thank you</p>'
+        '<li>[8] Singhal et al. LLMs encode clinical knowledge. Nature 2023.</li>'
+        '<li>[9] Guo et al. On calibration of modern networks. ICML 2017.</li>'
+        '<li>[10] U.S. FDA. Clinical Decision Support guidance; GMLP.</li></ul></div>'
+        '<p class="illus" style="margin-top:1.2em">Verify against the primary sources '
+        'before citing.</p>'
+        '<p class="sub" style="margin-top:1.4em;text-align:center">MedJar · thank '
+        'you</p>'
     )))
 
     html = ("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n"
