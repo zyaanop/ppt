@@ -136,6 +136,13 @@ Download [`presentation.html`](presentation.html) and open it — no server need
 `←` `→` or click to navigate, `A` to auto-advance, `F` for fullscreen, `Home`/`End` to
 jump. Deep-links via `#s12`.
 
+**Auto-play** dwells long enough to actually read each slide unattended — 20 s on
+section dividers, 25 s on text slides, 30 s on figure slides (≈13½ minutes for the
+full deck). A thin bar under the progress bar shows time remaining on the current
+slide. Any manual navigation pauses the timer and resumes it after a few seconds;
+press `A` (or click **Pause**) to stop it entirely. Timings live in `DWELL` in
+[`build_deck.py`](build_deck.py) if you want them faster or slower.
+
 ---
 
 *Decision support only. A licensed clinician remains the decision-maker and is

@@ -140,6 +140,9 @@ td.num{font-family:var(--mono);font-size:.92em}
 .byline .af{color:var(--ink3);font-size:12px}
 .progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);z-index:20;
   transition:width .28s ease}
+/* per-slide dwell indicator, only advances while auto-play is running */
+.dwell{position:fixed;top:3px;left:0;height:2px;width:0;z-index:19;
+  background:rgba(138,21,36,.32)}
 .chrome{position:fixed;bottom:12px;right:20px;z-index:20;font-family:var(--mono);
   font-size:11px;color:var(--ink3)}
 .hint{position:fixed;bottom:12px;left:20px;z-index:20;font-size:10.5px;color:var(--faint)}
@@ -175,11 +178,29 @@ JS = """
   function go(i){cur=Math.max(0,Math.min(total-1,i));render();}
   const next=()=>{ if(cur<total-1) go(cur+1); else stop(); };
   const prev=()=>go(cur-1);
-  function sched(){clearTimeout(timer); if(!auto)return;
+  // Dwell time per slide, in the 20-30s band: long enough to actually read a
+  // slide unattended. Denser slides get longer.
+  const DWELL={divider:20000, figure:30000, normal:25000};
+  function dwell(i){
+    const s=slides[i];
+    if(s.classList.contains('divider')||s.classList.contains('title')) return DWELL.divider;
+    if(s.querySelector('.figwrap')) return DWELL.figure;
+    return DWELL.normal;
+  }
+  const db=document.getElementById('dwell');
+  function runBar(ms){
+    db.style.transition='none'; db.style.width='0%';
+    requestAnimationFrame(()=>{
+      db.style.transition='width '+ms+'ms linear'; db.style.width='100%';
+    });
+  }
+  function clearBar(){ db.style.transition='none'; db.style.width='0%'; }
+  function sched(){clearTimeout(timer); if(!auto){clearBar();return;}
     if(cur===total-1){stop();return;}
-    timer=setTimeout(()=>{next();sched();},4200);}
+    const ms=dwell(cur); runBar(ms);
+    timer=setTimeout(()=>{next();sched();},ms);}
   function start(){auto=true;ab.textContent='Pause';ab.style.color='var(--accent)';sched();}
-  function stop(){auto=false;ab.textContent='Auto';ab.style.color='';clearTimeout(timer);}
+  function stop(){auto=false;ab.textContent='Auto';ab.style.color='';clearTimeout(timer);clearBar();}
   ab.onclick=()=>auto?stop():start();
   function pause(){if(auto){clearTimeout(timer);clearTimeout(relaunch);
     relaunch=setTimeout(()=>{if(auto)sched();},6000);}}
@@ -742,6 +763,7 @@ def build() -> str:
             "<title>MedJar — Consensus Diagnosis by Debating Specialist Agents</title>\n"
             f"<style>{CSS}</style>\n</head>\n<body>\n"
             "<div class=\"progress\" id=\"progress\"></div>\n"
+            "<div class=\"dwell\" id=\"dwell\"></div>\n"
             f"<div id=\"deck\">\n{''.join(d)}\n</div>\n"
             "<div class=\"dots\" id=\"dots\"></div>\n"
             "<div class=\"hint\">← → navigate&nbsp;·&nbsp;"
